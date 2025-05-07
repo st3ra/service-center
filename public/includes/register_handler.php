@@ -1,0 +1,75 @@
+<?php
+require_once 'db.php';
+require_once 'validation.php';
+
+function handle_registration($pdo) {
+    $errors = [];
+    $success = '';
+    $form_data = [];
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        return ['errors' => $errors, 'success' => $success, 'form_data' => $form_data];
+    }
+
+    $name = trim($_POST['name'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $password_confirm = $_POST['password_confirm'] ?? '';
+    $role = 'client';
+
+    // Валидация обязательных полей
+    $errors = array_merge($errors, validate_form([
+        'name' => $name,
+        'phone' => $phone,
+        'email' => $email,
+        'password' => $password,
+        'password_confirm' => $password_confirm
+    ]));
+
+    // Валидация формата
+    if (!isset($errors['email']) && $email) {
+        $email_error = validate_email($email);
+        if ($email_error) $errors['email'] = $email_error;
+    }
+    if (!isset($errors['phone']) && $phone) {
+        $phone_error = validate_phone($phone);
+        if ($phone_error) $errors['phone'] = $phone_error;
+    }
+    if (!isset($errors['password']) && $password) {
+        $password_error = validate_password($password);
+        if ($password_error) $errors['password'] = $password_error;
+    }
+    if (!isset($errors['password']) && !isset($errors['password_confirm']) && $password && $password_confirm) {
+        $password_confirm_error = validate_password_confirm($password, $password_confirm);
+        if ($password_confirm_error) $errors['password_confirm'] = $password_confirm_error;
+    }
+
+    // Если ошибок нет, регистрируем пользователя
+    if (empty($errors)) {
+        try {
+            $password_hashed = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare('INSERT INTO users (name, phone, email, password, role) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([$name, $phone, $email, $password_hashed, $role]);
+            $success = 'Регистрация успешна! Теперь вы можете <a href="login.php">войти</a>.';
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                $errors['email'] = 'Email уже зарегистрирован';
+            } else {
+                $errors['general'] = 'Ошибка: ' . $e->getMessage();
+            }
+        }
+    }
+
+    $form_data = [
+        'name' => $name,
+        'phone' => $phone,
+        'email' => $email
+    ];
+
+    return [
+        'errors' => $errors,
+        'success' => $success,
+        'form_data' => $form_data
+    ];
+}

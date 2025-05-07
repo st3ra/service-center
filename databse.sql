@@ -1,10 +1,9 @@
--- Создание таблицы users
+-- Создание таблицы users (без address)
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     phone VARCHAR(20) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    address TEXT NOT NULL,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'worker', 'editor', 'client') NOT NULL DEFAULT 'client'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -26,22 +25,20 @@ CREATE TABLE services (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Создание таблицы requests
+-- Создание таблицы requests (тоже без address, если он не нужен)
 CREATE TABLE requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    name VARCHAR(255) DEFAULT NULL,
-    phone VARCHAR(20) DEFAULT NULL,
-    email VARCHAR(255) DEFAULT NULL,
-    address TEXT DEFAULT NULL,
+    user_id INT NULL,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    email VARCHAR(255) NOT NULL,
     service_id INT NOT NULL,
-    description TEXT NOT NULL,
-    file_path VARCHAR(255) DEFAULT NULL,
+    description TEXT,
+    file_path VARCHAR(255),
     status ENUM('new', 'in_progress', 'completed') DEFAULT 'new',
-    comment TEXT DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (service_id) REFERENCES services(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Создание таблицы reviews
