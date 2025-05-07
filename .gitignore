@@ -4,4 +4,3 @@
 /public/uploads/
 /public/images/services/
 .env
-docker-compose.yml
