@@ -1,7 +1,12 @@
 <?php
+require_once 'includes/db.php';
+
 try {
-    $pdo = new PDO("mysql:host=db;dbname=service_center", "user", "password");
-    echo "Connected to database!";
+    $stmt = $pdo->query('SELECT * FROM users');
+    $users = $stmt->fetchAll();
+    echo '<pre>';
+    print_r($users);
+    echo '</pre>';
 } catch (PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
+    echo 'Error: ' . $e->getMessage();
 }
