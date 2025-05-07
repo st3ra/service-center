@@ -1,0 +1,6 @@
+/vendor/
+/.idea/
+*.log
+/public/uploads/
+.env
+docker-compose.yml
