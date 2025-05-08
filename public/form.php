@@ -1,7 +1,7 @@
 <?php
 require_once 'includes/header.php';
 require_once 'includes/db.php';
-require_once 'includes/form_handler.php';
+require_once 'includes/handlers/form_handler.php';
 
 if (!isset($_GET['service_id'])) {
     die('Не указан ID услуги');

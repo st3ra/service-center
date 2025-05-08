@@ -1,6 +1,6 @@
 <?php
-require_once 'db.php';
-require_once 'validation.php';
+require_once 'includes/db.php';
+require_once 'includes/validation.php';
 
 function handle_login($pdo) {
     $errors = [];

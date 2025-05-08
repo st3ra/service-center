@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/logout_handler.php';
+require_once 'includes/handlers/logout_handler.php';
 
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 

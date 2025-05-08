@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once 'includes/db.php';
-require_once 'includes/profile_handler.php';
+require_once 'includes/handlers/profile_handler.php';
 
 // Проверяем, является ли запрос AJAX
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
