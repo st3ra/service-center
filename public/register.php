@@ -1,6 +1,15 @@
 <?php
-require_once 'includes/header.php';
 require_once 'includes/register_handler.php';
+
+$is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+if ($is_ajax) {
+    session_start();
+    handle_registration($pdo);
+    exit;
+}
+
+require_once 'includes/header.php';
 
 $result = handle_registration($pdo);
 $errors = $result['errors'];
@@ -10,21 +19,9 @@ $form_data = $result['form_data'] ?? [];
 
 <h1>Регистрация</h1>
 
-<?php if ($success): ?>
-    <div class="alert alert-success"><?php echo $success; ?></div>
-<?php endif; ?>
+<div id="notification" class="alert" style="display:none;"></div>
 
-<?php if (!empty($errors)): ?>
-    <div class="alert alert-danger">
-        <ul>
-            <?php foreach ($errors as $error): ?>
-                <li><?php echo $error; ?></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-<?php endif; ?>
-
-<form method="post">
+<form id="register-form">
     <div class="mb-3">
         <label for="name" class="form-label">ФИО</label>
         <input type="text" class="form-control <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" id="name" name="name" value="<?php echo isset($form_data['name']) ? htmlspecialchars($form_data['name']) : ''; ?>" required>
