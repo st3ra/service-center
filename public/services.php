@@ -20,10 +20,18 @@ $categories = $pdo->query('SELECT * FROM categories')->fetchAll();
                 $stmt = $pdo->prepare('SELECT * FROM services WHERE category_id = ?');
                 $stmt->execute([$category['id']]);
                 $services = $stmt->fetchAll();
-                foreach ($services as $service): ?>
+                foreach ($services as $service):
+                    $image_path = $service['image_path'] ?: 'images/services/placeholder.jpg';
+                    $full_path = $_SERVER['DOCUMENT_ROOT'] . '/' . $image_path;
+                    error_log("Checking image: $full_path");
+                    if (!file_exists($full_path)) {
+                        error_log("Image not found: $full_path");
+                        $image_path = 'images/services/placeholder.jpg';
+                    }
+                ?>
                     <div class="col-md-4">
                         <div class="card">
-                            <img src="<?php echo $service['image_path'] ?: 'images/services/placeholder.jpg'; ?>" class="card-img-top" alt="<?php echo $service['name']; ?>">
+                            <img src="/<?php echo $image_path; ?>" class="card-img-top" alt="<?php echo $service['name']; ?>">
                             <div class="card-body">
                                 <h5 class="card-title"><?php echo $service['name']; ?></h5>
                                 <p class="card-text"><?php echo $service['description']; ?></p>

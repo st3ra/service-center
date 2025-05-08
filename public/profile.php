@@ -1,5 +1,4 @@
 <?php
-// Запускаем сессию, если она ещё не активна
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -7,7 +6,6 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once 'includes/db.php';
 require_once 'includes/handlers/profile_handler.php';
 
-// Проверяем, является ли запрос AJAX
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
 if (!isset($_SESSION['user_id'])) {
@@ -26,7 +24,6 @@ if ($is_ajax && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Получаем данные пользователя
 $stmt = $pdo->prepare('SELECT name, phone, email FROM users WHERE id = ?');
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -35,12 +32,10 @@ if (!$user) {
     die('Пользователь не найден');
 }
 
-// Инициализируем данные для шаблона
 $user_data = ['name' => $user['name'] ?? '', 'phone' => $user['phone'] ?? '', 'email' => $user['email'] ?? ''];
 $errors = [];
 $success = '';
 
-// Обработка редактирования профиля для не-AJAX POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = handle_profile_edit($pdo);
     $errors = $result['errors'] ?? [];
@@ -48,17 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_data = $result['user_data'] ?? $user_data;
 }
 
-// Получаем заявки пользователя с названием услуги
 $stmt = $pdo->prepare('
     SELECT r.id, r.service_id, r.status, r.created_at, s.name AS service_name
     FROM requests r
     JOIN services s ON r.service_id = s.id
     WHERE r.user_id = ?
+    ORDER BY r.created_at DESC
 ');
 $stmt->execute([$_SESSION['user_id']]);
 $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Включаем HTML только для не-AJAX запросов
 require_once 'includes/header.php';
 ?>
 
@@ -66,7 +60,6 @@ require_once 'includes/header.php';
 
 <div id="notification" class="alert" style="display:none;"></div>
 
-<!-- Данные пользователя -->
 <div class="card mb-4">
     <div class="card-body">
         <h5 class="card-title">Личные данные</h5>
@@ -104,7 +97,6 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<!-- Список заявок -->
 <h2>Мои заявки</h2>
 <table class="table table-striped">
     <thead>
