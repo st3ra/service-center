@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/handlers/admin_login_handler.php';
 
-if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'admin') {
+if (isset($_SESSION['user_id']) && in_array($_SESSION['role'], ['admin', 'worker', 'editor'])) {
     header('Location: /admin/index.php');
     exit;
 }

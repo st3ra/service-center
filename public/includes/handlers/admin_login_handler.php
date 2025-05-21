@@ -30,12 +30,12 @@ function handle_admin_login($pdo) {
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
-                if ($user['role'] === 'admin') {
+                if (in_array($user['role'], ['admin', 'worker', 'editor'])) {
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['role'] = $user['role'];
                     return ['success' => true];
                 } else {
-                    $errors['general'] = 'У вас нет прав администратора';
+                    $errors['general'] = 'У вас нет прав для доступа к админ-панели';
                 }
             } else {
                 $errors['general'] = 'Неверный email или пароль';
