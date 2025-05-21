@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/db.php';
-require_once 'includes/validation.php';
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../validation.php';
 
 function handle_form_submission($pdo, $service_id, $user) {
     $errors = [];
