@@ -49,6 +49,17 @@ CREATE TABLE request_files (
     FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Создание таблицы request_comments
+CREATE TABLE request_comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    user_id INT NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Создание таблицы reviews
 CREATE TABLE reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
