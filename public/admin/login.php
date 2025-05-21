@@ -57,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/assets/js/admin.js"></script>
+    <script src="/assets/js/admin/utils.js"></script>
+    <script src="/assets/js/admin/login.js"></script>
 </body>
 </html>

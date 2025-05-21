@@ -217,7 +217,8 @@ $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/assets/js/admin.js"></script>
+    <script src="/assets/js/admin/utils.js"></script>
+    <script src="/assets/js/admin/profile.js"></script>
 </head>
 <body>
     <div class="container mt-5">
@@ -305,6 +306,7 @@ $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <th>Услуга</th>
                                 <th>Статус</th>
                                 <th>Дата создания</th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -314,6 +316,11 @@ $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <td><?php echo htmlspecialchars($request['service_name']); ?></td>
                                     <td><?php echo htmlspecialchars($request['status']); ?></td>
                                     <td><?php echo htmlspecialchars($request['created_at']); ?></td>
+                                    <td>
+                                        <a href="/admin/request.php?id=<?php echo $request['id']; ?>" class="btn btn-info btn-sm">
+                                            <i class="bi bi-eye"></i> Просмотр
+                                        </a>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

@@ -142,18 +142,19 @@ if ($is_ajax) {
         }
     </style>
     <script>
-        // Передаем начальные значения в JavaScript
+        // Инициализация начального состояния
         const initialState = {
-            status: <?php echo json_encode($status); ?>,
-            service_id: <?php echo json_encode($service_id); ?>,
-            date_from: <?php echo json_encode($date_from); ?>,
-            date_to: <?php echo json_encode($date_to); ?>,
-            sort_field: <?php echo json_encode($client_sort_field); ?>,
-            sort_order: <?php echo json_encode($sort_order); ?>
+            sort_field: '<?php echo $client_sort_field; ?>',
+            sort_order: '<?php echo $sort_order; ?>',
+            status: '<?php echo $status; ?>',
+            service_id: '<?php echo $service_id; ?>',
+            date_from: '<?php echo $date_from; ?>',
+            date_to: '<?php echo $date_to; ?>'
         };
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/assets/js/admin.js"></script>
+    <script src="/assets/js/admin/utils.js"></script>
+    <script src="/assets/js/admin/requests.js"></script>
 </head>
 <body>
     <div class="container mt-5">
