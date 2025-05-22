@@ -19,6 +19,7 @@ require_once '../includes/db.php';
             <ul class="nav">
                 <li class="nav-item"><a class="nav-link" href="/admin/requests.php">Заявки</a></li>
                 <li class="nav-item"><a class="nav-link" href="/admin/users.php">Пользователи</a></li>
+                <li class="nav-item"><a class="nav-link" href="/admin/categories.php">Категории</a></li>
                 <li class="nav-item"><a class="nav-link" href="/admin/logout.php">Выйти</a></li>
             </ul>
         </nav>
