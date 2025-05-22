@@ -9,11 +9,11 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./public:/var/www/html
+      - ./:/var/www/html
     depends_on:
       - db
     environment:
-      - APACHE_DOCUMENT_ROOT=/var/www/html
+      - APACHE_DOCUMENT_ROOT=/var/www/html/public
 
   db:
     image: mysql:8.0

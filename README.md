@@ -1,62 +1,71 @@
 # Service Center
 
-A web application for booking repair services and managing requests.
+A web application for service centers: booking, request management, analytics.
 
-## Prerequisites
+## Requirements
+- Docker Desktop
+- Git
 
-- Docker Desktop installed
-- Git installed
-- A GitHub account with SSH keys configured
+## Quick Start
 
-## Setup and Installation
-
-1. **Clone the repository**:
+1. **Clone the repository:**
    ```bash
    git clone git@github.com:your_username/service-center.git
    cd service-center
    ```
 
-2. **Configure environment variables**:
-   Copy the `.env.example` file to `.env` and set your desired values:
+2. **Copy and configure environment variables:**
    ```bash
    cp .env.example .env
+   # Edit .env (MySQL passwords, DB name, etc.)
    ```
-   Edit `.env` to specify MySQL credentials (e.g., `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`).
 
-3. **Start Docker containers**:
+3. **Build and start containers:**
    ```bash
+   docker-compose build --no-cache
    docker-compose up -d
    ```
-   This will start the PHP, MySQL, and phpMyAdmin containers.
 
-4. **Set up file permissions**:
+4. **Install dependencies via Docker Composer:**
+   ```bash
+   docker-compose exec php composer install --no-interaction --prefer-dist --optimize-autoloader
+   ```
+
+5. **Set permissions for upload and temp folders:**
    ```bash
    docker-compose exec php bash
-   chown -R www-data:www-data /var/www/html/images/services /var/www/html/uploads
-   chmod -R 755 /var/www/html/images/services /var/www/html/uploads
+   chown -R www-data:www-data /var/www/html/images/services /var/www/html/public/uploads /var/www/html/tmp
+   chmod -R 755 /var/www/html/images/services /var/www/html/public/uploads /var/www/html/tmp
    exit
    ```
 
-5. **Initialize the database**:
-   - Open phpMyAdmin at `http://localhost:8081` (use credentials from `.env`, e.g., `MYSQL_USER` and `MYSQL_PASSWORD`).
-   - Create a database named `service_center` (if not already created).
-   - Go to the "SQL" tab, paste the contents of `database.sql`, and execute to create tables and insert test data.
+6. **Initialize the database:**
+   - Open phpMyAdmin: [http://localhost:8081](http://localhost:8081)
+   - Create a database (e.g., `service_center`)
+   - Import `database.sql` via the "Import" tab or run:
+     ```bash
+     docker-compose exec db mysql -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE < database.sql
+     ```
 
-   Alternatively, import the SQL file via the phpMyAdmin "Import" tab or run:
-   ```bash
-   docker-compose exec db mysql -u $MYSQL_USER -p$MYSQL_PASSWORD service_center < database.sql
-   ```
+7. **Access the application:**
+   - Main page: [http://localhost:8080](http://localhost:8080)
+   - phpMyAdmin: [http://localhost:8081](http://localhost:8081)
 
-6. **Access the application**:
-   - Main page: `http://localhost:8080`
-   - phpMyAdmin: `http://localhost:8081`
+## Notes
+- The entire project is mounted into the container: `- ./:/var/www/html`
+- Apache DocumentRoot: `/var/www/html/public`
+- The `tmp` directory is used by mPDF for temporary files. It is present in the repository (empty), and its contents are ignored by git.
+- For mPDF, use tempDir: `__DIR__ . '/../tmp'`
+- In public scripts, use autoload: `require_once __DIR__ . '/../vendor/autoload.php';`
 
-## Test Credentials
+## Test Users
 - **Admin**: `admin@example.com` / `password`
 - **Client**: `client@example.com` / `password`
 
 ## Project Structure
-- `public/`: Web-accessible files (pages, assets, includes)
-- `database.sql`: SQL script for database schema and test data
-- `docker-compose.yml`: Docker configuration
-- `.env.example`: Template for environment variables
+- `public/` — web-accessible files (pages, assets, includes)
+- `vendor/` — Composer dependencies
+- `tmp/` — mPDF temporary files (already present!)
+- `database.sql` — database schema and test data
+- `docker-compose.yml` — Docker configuration
+- `.env.example` — environment variables template

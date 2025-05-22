@@ -3,3 +3,8 @@
 *.log
 /public/uploads/
 .env
+# Игнорировать composer.lock (оставь, если не хочешь фиксировать зависимости в git)
+composer.lock
+# Игнорировать содержимое tmp, но не саму папку
+/tmp/*
+!tmp/
