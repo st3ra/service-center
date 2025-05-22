@@ -9,3 +9,4 @@ composer.lock
 /tmp/*
 !tmp/
 !tmp/.gitkeep
+public/test_data.sql

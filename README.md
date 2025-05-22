@@ -69,3 +69,30 @@ A web application for service centers: booking, request management, analytics.
 - `database.sql` — database schema and test data
 - `docker-compose.yml` — Docker configuration
 - `.env.example` — environment variables template
+
+## Generating and Loading Test Data
+
+1. **Generate test data:**
+   ```bash
+   php public/generate_test_data.php
+   ```
+   This will create the file `public/test_data.sql`.
+
+2. **Clear old test data (do not delete the admin, id=1 is admin!):**
+   Go to phpMyAdmin or run in MySQL:
+   ```sql
+   DELETE FROM request_comments;
+   DELETE FROM requests;
+   DELETE FROM users WHERE id > 1; -- id=1 is the admin user
+   ALTER TABLE users AUTO_INCREMENT = 2;
+   ALTER TABLE requests AUTO_INCREMENT = 1;
+   ALTER TABLE request_comments AUTO_INCREMENT = 1;
+   ```
+
+3. **Load test data into the database via Docker:**
+   In the project root, use the following command (do NOT use PowerShell, use cmd.exe on Windows or a Linux/macOS terminal):
+   ```sh
+   docker exec -i service-center-mysql mysql -u root -proot service_center < public/test_data.sql
+   ```
+
+   If you use a different container name or user, adjust the command accordingly.
