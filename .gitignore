@@ -8,3 +8,4 @@ composer.lock
 # Игнорировать содержимое tmp, но не саму папку
 /tmp/*
 !tmp/
+!tmp/.gitkeep
