@@ -117,7 +117,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
 </head>
 <body class="bg-light">
 <div class="container py-4">
-    <h1 class="mb-4">Финансовая аналитика</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="../analytics.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Назад к аналитике</a>
+        <h1 class="mb-0">Финансовая аналитика</h1>
+        <div></div>
+    </div>
     <form id="filters-form" class="row g-3 mb-4">
         <div class="col-md-3">
             <label for="date-from" class="form-label">Дата от</label>
@@ -168,7 +172,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'stats') {
             </div>
         </div>
     </div>
-    <a href="../analytics.php" class="btn btn-secondary">← Назад к аналитике</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-success" id="download-pdf">Скачать PDF-отчёт</button>
+    </div>
 </div>
 <script src="/assets/js/admin/analytics/finance.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

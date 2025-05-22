@@ -164,4 +164,83 @@ function updateAnalytics() {
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filters-form').addEventListener('change', updateAnalytics);
     updateAnalytics();
+});
+
+// === PDF EXPORT ===
+document.getElementById('download-pdf').addEventListener('click', function () {
+    // Метрики
+    const uniqueClients = document.getElementById('unique-clients').textContent;
+    // Топ-5 клиентов
+    const topClients = [];
+    document.querySelectorAll('#top-clients-list li').forEach(li => {
+        const name = li.querySelector('span')?.textContent || li.textContent;
+        const count = li.querySelector('.badge')?.textContent || '';
+        if (name && count) topClients.push({ name, count });
+    });
+    // Активность сотрудников
+    const staffComments = document.getElementById('staff-comments').textContent;
+    const staffRequests = document.getElementById('staff-requests').textContent;
+    // Таблица топ-5 клиентов
+    const topClientsTable = [];
+    document.querySelectorAll('#top-clients-table tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length === 3 && !tds[0].classList.contains('text-center')) {
+            topClientsTable.push({ name: tds[0].textContent, requests_count: tds[1].textContent, total_sum: tds[2].textContent });
+        }
+    });
+    // Топ-5 сотрудников
+    const topStaff = [];
+    document.querySelectorAll('#top-staff-table tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length === 3 && !tds[0].classList.contains('text-center')) {
+            topStaff.push({ name: tds[0].textContent, requests_handled: tds[1].textContent, comments_count: tds[2].textContent });
+        }
+    });
+    // Графики
+    let staffBarImg = '';
+    let staffRequestsBarImg = '';
+    if (window.staffBarChart) {
+        staffBarImg = window.staffBarChart.toBase64Image();
+    }
+    if (window.staffRequestsBarChart) {
+        staffRequestsBarImg = window.staffRequestsBarChart.toBase64Image();
+    }
+    // Период
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    // Формируем данные
+    const data = {
+        uniqueClients,
+        topClients,
+        staffComments,
+        staffRequests,
+        topClientsTable,
+        topStaff,
+        staffBarImg,
+        staffRequestsBarImg,
+        date_from,
+        date_to
+    };
+    fetch('/admin/pdf/users.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Ошибка генерации PDF');
+        return res.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'users_analytics_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert('Ошибка при генерации PDF: ' + err.message);
+    });
 }); 

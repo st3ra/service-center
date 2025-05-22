@@ -74,8 +74,12 @@ if (isset($_GET['type']) && $_GET['type'] === 'reviews') {
 </head>
 <body class="bg-light">
 <div class="container py-4">
-    <h1 class="mb-4">Экспорт данных</h1>
-    <form class="row g-3 mb-4" id="export-form" onsubmit="return false;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="../analytics.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Назад к аналитике</a>
+        <h1 class="mb-0">Экспорт данных</h1>
+        <div></div>
+    </div>
+    <form class="row g-3 mb-2" id="export-form" onsubmit="return false;">
         <div class="col-md-3">
             <label for="date-from" class="form-label">Дата от</label>
             <input type="date" class="form-control" id="date-from" name="date_from" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>">
@@ -84,12 +88,19 @@ if (isset($_GET['type']) && $_GET['type'] === 'reviews') {
             <label for="date-to" class="form-label">Дата до</label>
             <input type="date" class="form-control" id="date-to" name="date_to" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>">
         </div>
-        <div class="col-md-6 d-flex align-items-end">
-            <button type="button" class="btn btn-primary me-2" id="export-requests">Экспорт заявок в CSV</button>
-            <button type="button" class="btn btn-secondary" id="export-reviews">Экспорт отзывов в CSV</button>
-        </div>
     </form>
-    <a href="../analytics.php" class="btn btn-outline-secondary">← Назад к аналитике</a>
+    <div class="row g-2 mb-4">
+        <div class="col-md-4">
+            <button type="button" class="btn btn-primary w-100" id="export-requests">Экспорт заявок в CSV</button>
+        </div>
+        <div class="col-md-4">
+            <button type="button" class="btn btn-secondary w-100" id="export-reviews">Экспорт отзывов в CSV</button>
+        </div>
+        <div class="col-md-4">
+            <button type="button" class="btn btn-success w-100" id="export-all-pdf">Экспортировать всю аналитику в PDF</button>
+        </div>
+    </div>
+    <div id="export-status" class="mt-3"></div>
 </div>
 <script>
 // JS для экспорта с учётом фильтров
@@ -108,6 +119,86 @@ document.getElementById('export-requests').onclick = function() {
 document.getElementById('export-reviews').onclick = function() {
     const params = getExportParams();
     window.location = 'export.php?type=reviews' + (params ? '&' + params : '');
+};
+document.getElementById('export-all-pdf').onclick = async function() {
+    const statusDiv = document.getElementById('export-status');
+    statusDiv.textContent = 'Формируется PDF-отчёт, пожалуйста, подождите...';
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    try {
+        const params = [];
+        if (date_from) params.push('date_from=' + encodeURIComponent(date_from));
+        if (date_to) params.push('date_to=' + encodeURIComponent(date_to));
+        const query = params.length ? ('&' + params.join('&')) : '';
+        // Параллельные запросы
+        const [requests, services, categories, users, reviews, finance, trends] = await Promise.all([
+            fetch('requests.php?action=stats' + query).then(r => r.json()),
+            fetch('services.php?action=stats' + query).then(r => r.json()),
+            fetch('categories.php?action=stats' + query).then(r => r.json()),
+            fetch('users.php?action=stats' + query).then(r => r.json()),
+            fetch('reviews.php?action=stats' + query).then(r => r.json()),
+            fetch('finance.php?action=stats' + query).then(r => r.json()),
+            fetch('trends.php?action=stats' + query).then(r => r.json()),
+        ]);
+        // === ДОБАВЛЯЕМ base64 графики ===
+        // Заявки
+        if (window.statusPieChart) requests.pieImg = window.statusPieChart.toBase64Image();
+        if (window.requestsLineChart) requests.lineImg = window.requestsLineChart.toBase64Image();
+        // Услуги
+        if (window.servicesBarChart) services.barImg = window.servicesBarChart.toBase64Image();
+        if (window.revenuePieChart) services.pieImg = window.revenuePieChart.toBase64Image();
+        // Категории
+        if (window.requestsBarChart) categories.barImg = window.requestsBarChart.toBase64Image();
+        if (window.servicesPieChart) categories.pieImg = window.servicesPieChart.toBase64Image();
+        // Пользователи
+        if (window.staffBarChart) users.staffBarImg = window.staffBarChart.toBase64Image();
+        if (window.staffRequestsBarChart) users.staffRequestsBarImg = window.staffRequestsBarChart.toBase64Image();
+        // Отзывы
+        if (window.reviewsLineChart) reviews.lineImg = window.reviewsLineChart.toBase64Image();
+        // Финансы
+        if (window.revenueLineChart) finance.lineImg = window.revenueLineChart.toBase64Image();
+        if (window.categoryPieChart) finance.pieImg = window.categoryPieChart.toBase64Image();
+        // Тренды
+        if (window.requestsLineChart) trends.lineImg = window.requestsLineChart.toBase64Image();
+        if (window.seasonBarChart) trends.barImg = window.seasonBarChart.toBase64Image();
+        // Собираем всё в один объект
+        const data = {
+            date_from,
+            date_to,
+            requests,
+            services,
+            categories,
+            users,
+            reviews,
+            finance,
+            trends
+        };
+        fetch('/admin/pdf/export.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Ошибка генерации PDF');
+            return res.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'full_analytics_report.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            statusDiv.textContent = 'PDF-отчёт успешно сформирован.';
+        })
+        .catch(err => {
+            statusDiv.textContent = 'Ошибка при генерации PDF: ' + err.message;
+        });
+    } catch (err) {
+        statusDiv.textContent = 'Ошибка при сборе данных: ' + err.message;
+    }
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

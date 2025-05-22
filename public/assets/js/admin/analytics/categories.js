@@ -117,4 +117,72 @@ function updateAnalytics() {
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filters-form').addEventListener('change', updateAnalytics);
     updateAnalytics();
+});
+
+// === PDF EXPORT ===
+document.getElementById('download-pdf').addEventListener('click', function () {
+    // Метрики: услуги по категориям
+    const servicesByCategory = [];
+    document.querySelectorAll('#services-by-category-list li').forEach(li => {
+        const parts = li.textContent.split(':');
+        if (parts.length === 2) servicesByCategory.push({ name: parts[0].trim(), services_count: parts[1].replace(/[^\d]/g, '').trim() });
+    });
+    // Метрики: заявки по категориям
+    const requestsByCategory = [];
+    document.querySelectorAll('#requests-by-category-list li').forEach(li => {
+        const parts = li.textContent.split(':');
+        if (parts.length === 2) requestsByCategory.push({ name: parts[0].trim(), requests_count: parts[1].replace(/[^\d]/g, '').trim() });
+    });
+    // Графики
+    let barImg = '';
+    let pieImg = '';
+    if (window.requestsBarChart) {
+        barImg = window.requestsBarChart.toBase64Image();
+    }
+    if (window.servicesPieChart) {
+        pieImg = window.servicesPieChart.toBase64Image();
+    }
+    // Таблица: категории с малым количеством заявок
+    const fewRequests = [];
+    document.querySelectorAll('#categories-few-requests-table tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length === 3 && !tds[0].classList.contains('text-center')) {
+            fewRequests.push({ name: tds[0].textContent, services_count: tds[1].textContent, requests_count: tds[2].textContent });
+        }
+    });
+    // Период
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    // Формируем данные
+    const data = {
+        servicesByCategory,
+        requestsByCategory,
+        barImg,
+        pieImg,
+        fewRequests,
+        date_from,
+        date_to
+    };
+    fetch('/admin/pdf/categories.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Ошибка генерации PDF');
+        return res.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'categories_analytics_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert('Ошибка при генерации PDF: ' + err.message);
+    });
 }); 

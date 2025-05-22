@@ -80,4 +80,60 @@ function updateAnalytics() {
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filters-form').addEventListener('change', updateAnalytics);
     updateAnalytics();
+});
+
+// === PDF EXPORT ===
+document.getElementById('download-pdf').addEventListener('click', function () {
+    // Метрики
+    const total = document.getElementById('total-reviews').textContent;
+    const countPeriod = document.getElementById('reviews-period').textContent;
+    const avgLength = document.getElementById('avg-length').textContent;
+    // График
+    let lineImg = '';
+    if (window.reviewsLineChart) {
+        lineImg = window.reviewsLineChart.toBase64Image();
+    }
+    // Последние отзывы
+    const lastReviews = [];
+    document.querySelectorAll('#last-reviews-table tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length === 3 && !tds[0].classList.contains('text-center')) {
+            lastReviews.push({ author: tds[0].textContent, text: tds[1].textContent, created_at: tds[2].textContent });
+        }
+    });
+    // Период
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    // Формируем данные
+    const data = {
+        total,
+        countPeriod,
+        avgLength,
+        lineImg,
+        lastReviews,
+        date_from,
+        date_to
+    };
+    fetch('/admin/pdf/reviews.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Ошибка генерации PDF');
+        return res.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reviews_analytics_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert('Ошибка при генерации PDF: ' + err.message);
+    });
 }); 

@@ -126,4 +126,96 @@ function updateAnalytics() {
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filters-form').addEventListener('change', updateAnalytics);
     updateAnalytics();
-}); 
+});
+
+// === PDF EXPORT ===
+document.getElementById('download-pdf').addEventListener('click', function () {
+    // Топ-3 месяца
+    const topMonths = [];
+    document.querySelectorAll('#top-months-list li').forEach(li => {
+        if (!li.classList.contains('text-muted') && !li.classList.contains('text-danger')) {
+            topMonths.push(li.textContent.trim());
+        }
+    });
+    // Топ-5 услуг по выбранному сезону
+    const topServices = [];
+    document.querySelectorAll('#top-services-list li').forEach(li => {
+        if (!li.classList.contains('text-muted') && !li.classList.contains('text-danger')) {
+            topServices.push(li.textContent.trim());
+        }
+    });
+    // Графики
+    let lineImg = '';
+    let barImg = '';
+    if (window.requestsLineChart) {
+        lineImg = window.requestsLineChart.toBase64Image();
+    }
+    if (window.seasonBarChart) {
+        barImg = window.seasonBarChart.toBase64Image();
+    }
+    // Период
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    // Сезон
+    const seasonTabs = document.getElementById('season-tabs');
+    let selectedSeason = '';
+    seasonTabs.querySelectorAll('button').forEach(btn => {
+        if (btn.classList.contains('btn-primary')) selectedSeason = btn.textContent;
+    });
+    // Формируем данные
+    const data = {
+        topMonths,
+        topServices,
+        lineImg,
+        barImg,
+        date_from,
+        date_to,
+        selectedSeason
+    };
+    fetch('/admin/pdf/trends.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Ошибка генерации PDF');
+        return res.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'trends_analytics_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert('Ошибка при генерации PDF: ' + err.message);
+    });
+});
+
+// Вывод выбранного сезона под табами
+function showSelectedSeason() {
+    const seasonTabs = document.getElementById('season-tabs');
+    let selectedSeason = '';
+    seasonTabs.querySelectorAll('button').forEach(btn => {
+        if (btn.classList.contains('btn-primary')) selectedSeason = btn.textContent;
+    });
+    let el = document.getElementById('selected-season');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'selected-season';
+        el.className = 'mb-2 text-center fw-bold';
+        seasonTabs.parentNode.insertBefore(el, seasonTabs.nextSibling);
+    }
+    el.textContent = 'Выбранный сезон: ' + selectedSeason;
+}
+
+// Вызов showSelectedSeason при обновлении табов
+const origUpdateAnalytics = updateAnalytics;
+updateAnalytics = function() {
+    origUpdateAnalytics.apply(this, arguments);
+    setTimeout(showSelectedSeason, 0);
+}; 

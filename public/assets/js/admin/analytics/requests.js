@@ -155,4 +155,68 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Первая отрисовка
     updateAnalytics();
+});
+
+// === PDF EXPORT ===
+document.getElementById('download-pdf').addEventListener('click', function () {
+    // Собираем метрики
+    const metrics = {
+        total: document.getElementById('total-requests').textContent,
+        week: document.getElementById('requests-week').textContent,
+        month: document.getElementById('requests-month').textContent
+    };
+    // Получаем base64 графиков
+    let pieImg = '';
+    let lineImg = '';
+    if (window.statusPieChart) {
+        pieImg = window.statusPieChart.toBase64Image();
+    }
+    if (window.requestsLineChart) {
+        lineImg = window.requestsLineChart.toBase64Image();
+    }
+    // Собираем топ-5 дней
+    const topDays = [];
+    document.querySelectorAll('#top-days-table tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length === 2 && !tds[0].classList.contains('text-center')) {
+            topDays.push({ date: tds[0].textContent, count: tds[1].textContent });
+        }
+    });
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    // Формируем данные
+    const data = {
+        metrics,
+        pieImg,
+        lineImg,
+        topDays,
+        date_from,
+        date_to
+    };
+    // Отправляем на сервер (пока просто alert для проверки)
+    // TODO: заменить на fetch POST на requests_pdf.php
+    // alert(JSON.stringify(data, null, 2));
+    fetch('/admin/pdf/requests.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Ошибка генерации PDF');
+        return res.blob();
+    })
+    .then(blob => {
+        // Скачиваем PDF
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'analytics_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert('Ошибка при генерации PDF: ' + err.message);
+    });
 }); 

@@ -188,4 +188,86 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Первая отрисовка
     updateAnalytics();
+});
+
+// === PDF EXPORT ===
+document.getElementById('download-pdf').addEventListener('click', function () {
+    // Метрики
+    const revenue = document.getElementById('revenue-completed').textContent;
+    // Услуги без заявок (массив объектов)
+    const servicesNoRequests = [];
+    document.querySelectorAll('#services-no-requests-table tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length === 3 && !tds[0].classList.contains('text-center')) {
+            servicesNoRequests.push({
+                name: tds[0].textContent,
+                category: tds[1].textContent,
+                price: tds[2].textContent.replace(/[^\d.,]/g, '').trim()
+            });
+        }
+    });
+    // Топ-5 услуг
+    const topServices = [];
+    document.querySelectorAll('#top-services-list li').forEach(li => {
+        const name = li.querySelector('span')?.textContent || li.textContent;
+        const count = li.querySelector('.badge')?.textContent || '';
+        if (name && count) topServices.push({ name, count });
+    });
+    // Средняя цена по категориям
+    const avgPrices = [];
+    document.querySelectorAll('#avg-price-list li').forEach(li => {
+        const parts = li.textContent.split(':');
+        if (parts.length === 2) avgPrices.push({ category: parts[0].trim(), avg_price: parts[1].replace(/[^\d.,]/g, '').trim() });
+    });
+    // Графики
+    let barImg = '';
+    let pieImg = '';
+    if (window.servicesBarChart) {
+        barImg = window.servicesBarChart.toBase64Image();
+    }
+    if (window.revenuePieChart) {
+        pieImg = window.revenuePieChart.toBase64Image();
+    }
+    // Период
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    // Выбранные категории (названия)
+    const selectedCategories = [];
+    document.querySelectorAll('#category-checkboxes input[type=checkbox]:checked').forEach(cb => {
+        selectedCategories.push(cb.nextElementSibling.textContent.trim());
+    });
+    // Формируем данные
+    const data = {
+        revenue,
+        servicesNoRequests,
+        topServices,
+        avgPrices,
+        barImg,
+        pieImg,
+        date_from,
+        date_to,
+        selectedCategories
+    };
+    fetch('/admin/pdf/services.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Ошибка генерации PDF');
+        return res.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'services_analytics_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert('Ошибка при генерации PDF: ' + err.message);
+    });
 }); 

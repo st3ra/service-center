@@ -87,4 +87,54 @@ function updateAnalytics() {
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filters-form').addEventListener('change', updateAnalytics);
     updateAnalytics();
+});
+
+// === PDF EXPORT ===
+document.getElementById('download-pdf').addEventListener('click', function () {
+    // Метрики
+    const totalRevenue = document.getElementById('total-revenue').textContent;
+    const avgCheck = document.getElementById('avg-check').textContent;
+    // Графики
+    let lineImg = '';
+    let pieImg = '';
+    if (window.revenueLineChart) {
+        lineImg = window.revenueLineChart.toBase64Image();
+    }
+    if (window.categoryPieChart) {
+        pieImg = window.categoryPieChart.toBase64Image();
+    }
+    // Период
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    // Формируем данные
+    const data = {
+        totalRevenue,
+        avgCheck,
+        lineImg,
+        pieImg,
+        date_from,
+        date_to
+    };
+    fetch('/admin/pdf/finance.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Ошибка генерации PDF');
+        return res.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'finance_analytics_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert('Ошибка при генерации PDF: ' + err.message);
+    });
 }); 
