@@ -9,10 +9,13 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql
+    && docker-php-ext-install gd pdo pdo_mysql mbstring zip
 
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Установка mPDF
+RUN composer require mpdf/mpdf
 
 # Настройка Apache
 RUN a2enmod rewrite
