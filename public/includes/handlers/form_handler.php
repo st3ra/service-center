@@ -136,6 +136,14 @@ function handle_form_submission($pdo, $service_id, $user) {
             $pdo->commit();
             $success = 'Заявка успешно отправлена!';
             error_log('Request saved successfully: ID=' . $request_id);
+
+            // Сохраняем ID заявки в сессию для неавторизованных пользователей
+            if (!$user && $request_id) {
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                $_SESSION['guest_request_id'] = $request_id;
+            }
         } catch (PDOException $e) {
             $pdo->rollBack();
             $errors['general'] = 'Ошибка базы данных: ' . $e->getMessage();

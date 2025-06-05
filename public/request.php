@@ -8,13 +8,27 @@ require_once 'includes/handlers/request_handler.php';
 
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
+// Определяем, авторизован ли пользователь или это гость с правом просмотра
+$is_guest_view = false;
 if (!isset($_SESSION['user_id'])) {
-    if ($is_ajax) {
-        header('Content-Type: application/json');
-        echo json_encode(['errors' => ['general' => 'Необходимо войти']]);
+    $allow_guest = false;
+    if (isset($_SESSION['guest_request_id']) && isset($_GET['id'])) {
+        $guest_id = (int)$_SESSION['guest_request_id'];
+        $req_id = (int)$_GET['id'];
+        if ($guest_id === $req_id) {
+            $allow_guest = true;
+            $is_guest_view = true;
+        }
+    }
+    if (!$allow_guest) {
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['errors' => ['general' => 'Необходимо войти']]);
+            exit;
+        }
+        header('Location: /');
         exit;
     }
-    die('Необходимо войти');
 }
 
 if (!isset($_GET['id'])) {
@@ -165,13 +179,23 @@ if ($is_ajax && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $pdo->prepare('
-    SELECT r.id, r.service_id, r.status, r.created_at, r.description, s.name AS service_name
-    FROM requests r
-    JOIN services s ON r.service_id = s.id
-    WHERE r.id = ? AND r.user_id = ?
-');
-$stmt->execute([$request_id, $_SESSION['user_id']]);
+if ($is_guest_view) {
+    $stmt = $pdo->prepare('
+        SELECT r.id, r.service_id, r.status, r.created_at, r.description, s.name AS service_name
+        FROM requests r
+        JOIN services s ON r.service_id = s.id
+        WHERE r.id = ?
+    ');
+    $stmt->execute([$request_id]);
+} else {
+    $stmt = $pdo->prepare('
+        SELECT r.id, r.service_id, r.status, r.created_at, r.description, s.name AS service_name
+        FROM requests r
+        JOIN services s ON r.service_id = s.id
+        WHERE r.id = ? AND r.user_id = ?
+    ');
+    $stmt->execute([$request_id, $_SESSION['user_id']]);
+}
 $request = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$request) {

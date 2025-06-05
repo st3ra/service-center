@@ -14,7 +14,8 @@ if (!isset($_SESSION['user_id'])) {
         echo json_encode(['errors' => ['general' => 'Необходимо войти']]);
         exit;
     }
-    die('Необходимо войти');
+    header('Location: /');
+    exit;
 }
 
 if ($is_ajax && $_SERVER['REQUEST_METHOD'] === 'POST') {

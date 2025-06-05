@@ -17,7 +17,9 @@ $(document).ready(function() {
                 if (response.success) {
                     $('#notification').text(response.success).addClass('alert-success').show();
                     $('#auth-nav').html(response.nav_html);
-                    setTimeout(function() { $('#notification').fadeOut(); }, 2000);
+                    setTimeout(function() {
+                        window.location.href = '/';
+                    }, 1000);
                 } else if (response.errors) {
                     var errorHtml = '<ul>';
                     $.each(response.errors, function(key, error) {
@@ -47,7 +49,9 @@ $(document).ready(function() {
                 if (response.success) {
                     $('#notification').text(response.success).addClass('alert-success').show();
                     $('#auth-nav').html(response.nav_html);
-                    setTimeout(function() { $('#notification').fadeOut(); }, 2000);
+                    setTimeout(function() {
+                        window.location.href = '/';
+                    }, 1000);
                 } else if (response.errors) {
                     var errorHtml = '<ul>';
                     $.each(response.errors, function(key, error) {
@@ -75,7 +79,9 @@ $(document).ready(function() {
                 if (response.success) {
                     $('#auth-nav').html(response.nav_html);
                     $('#notification').text(response.success).addClass('alert-success').show();
-                    setTimeout(function() { $('#notification').fadeOut(); }, 2000);
+                    setTimeout(function() {
+                        window.location.href = '/';
+                    }, 1000);
                 }
             },
             error: function(xhr, status, error) {
@@ -206,10 +212,8 @@ $(document).ready(function() {
                         console.log('Redirecting to /request.php?id=' + response.request_id);
                         window.location.href = '/request.php?id=' + response.request_id;
                     } else {
-                        $('#notification').text(response.success).addClass('alert-success').show();
-                        setTimeout(function() {
-                            window.location.href = '/';
-                        }, 2000);
+                        // Для гостя: редиректим на просмотр заявки
+                        window.location.href = '/request.php?id=' + response.request_id;
                     }
                 } else if (response.errors) {
                     console.log('Errors:', response.errors);
