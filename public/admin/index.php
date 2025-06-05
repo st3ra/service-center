@@ -86,6 +86,17 @@ require_once '../includes/db.php';
                 </a>
             </div>
             <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <a href="/admin/reviews.php" class="admin-link">
+                    <div class="card admin-card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="admin-icon"><i class="bi bi-chat-dots"></i></div>
+                            <h5 class="card-title">Отзывы</h5>
+                            <p class="card-text small text-muted">Модерация и редактирование отзывов</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                 <a href="/admin/logout.php" class="admin-link">
                     <div class="card admin-card h-100 shadow-sm">
                         <div class="card-body text-center">

@@ -211,6 +211,61 @@ $stmt = $pdo->prepare('SELECT id, file_path FROM request_files WHERE request_id 
 $stmt->execute([$request_id]);
 $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// --- Обработка отзыва ---
+$review_error = '';
+$review_success = '';
+$review_text = '';
+$can_leave_review = false;
+$review = null;
+
+if (isset($request['id'])) {
+    // Проверяем, есть ли отзыв по этой заявке
+    $stmt = $pdo->prepare('SELECT * FROM reviews WHERE request_id = ?');
+    $stmt->execute([$request['id']]);
+    $review = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Можно оставить отзыв, если заявка выполнена, отзыв не оставлен, пользователь авторизован и заявка его
+    if (
+        isset($_SESSION['user_id']) &&
+        !$is_guest_view &&
+        $request['status'] === 'completed' &&
+        !$review
+    ) {
+        $can_leave_review = true;
+    }
+
+    // Обработка отправки отзыва
+    if ($can_leave_review && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['review_text'])) {
+        $review_text = trim($_POST['review_text']);
+        if (mb_strlen($review_text) < 5) {
+            $review_error = 'Отзыв слишком короткий.';
+        } elseif (mb_strlen($review_text) > 1000) {
+            $review_error = 'Отзыв слишком длинный (максимум 1000 символов).';
+        } else {
+            // Получаем имя пользователя по user_id
+            $user_name = '';
+            $stmt_user = $pdo->prepare('SELECT name FROM users WHERE id = ?');
+            $stmt_user->execute([$_SESSION['user_id']]);
+            if ($row = $stmt_user->fetch()) {
+                $user_name = $row['name'];
+            }
+            $stmt = $pdo->prepare('INSERT INTO reviews (request_id, user_id, author, text) VALUES (?, ?, ?, ?)');
+            $stmt->execute([
+                $request['id'],
+                $_SESSION['user_id'],
+                $user_name,
+                $review_text
+            ]);
+            $review_success = 'Спасибо за ваш отзыв!';
+            // Получаем только что добавленный отзыв
+            $stmt = $pdo->prepare('SELECT * FROM reviews WHERE request_id = ?');
+            $stmt->execute([$request['id']]);
+            $review = $stmt->fetch(PDO::FETCH_ASSOC);
+            $can_leave_review = false;
+        }
+    }
+}
+
 require_once 'includes/header.php';
 ?>
 
@@ -250,8 +305,25 @@ require_once 'includes/header.php';
     </div>
 </div>
 
+<?php
+if ($review) {
+    echo '<div class="card mb-4"><div class="card-body">';
+    echo '<h5 class="card-title">Ваш отзыв</h5>';
+    echo '<p class="mb-1"><b>Текст:</b> ' . htmlspecialchars($review['text']) . '</p>';
+    echo '<p class="mb-0 text-muted"><small>Оставлен: ' . htmlspecialchars($review['created_at']) . '</small></p>';
+    echo '</div></div>';
+} elseif ($can_leave_review) {
+    echo '<div class="card mb-4"><div class="card-body">';
+    echo '<h5 class="card-title">Оставить отзыв</h5>';
+    if ($review_error) echo '<div class="alert alert-danger">' . htmlspecialchars($review_error) . '</div>';
+    if ($review_success) echo '<div class="alert alert-success">' . htmlspecialchars($review_success) . '</div>';
+    echo '<form method="post"><div class="mb-3">';
+    echo '<textarea name="review_text" class="form-control" rows="4" maxlength="1000" required placeholder="Ваш отзыв...">' . htmlspecialchars($review_text) . '</textarea>';
+    echo '</div><button type="submit" class="btn btn-success">Отправить отзыв</button></form>';
+    echo '</div></div>';
+}
+?>
 <a href="profile.php" class="btn btn-outline-secondary">Назад к профилю</a>
-
 <?php
 require_once 'includes/footer.php';
 ?>

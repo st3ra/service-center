@@ -63,9 +63,13 @@ CREATE TABLE request_comments (
 -- Создание таблицы reviews
 CREATE TABLE reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    user_id INT NOT NULL,
     author VARCHAR(255) NOT NULL,
     text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Вставка тестовых данных
@@ -142,7 +146,7 @@ INSERT INTO services (category_id, name, description, price, image_path) VALUES
 (5, 'Ремонт телескопа', 'Калибровка оптики, ремонт монтировки.', 4000.00, 'images/services/telescope_repair.jpg');
 
 -- Тестовые отзывы
-INSERT INTO reviews (author, text) VALUES
-('Иван Иванов', 'Отличный сервис! Быстро и качественно отремонтировали мой холодильник.'),
-('Мария Петрова', 'Очень довольна ремонтом смартфона. Спасибо!'),
-('Алексей Сидоров', 'Профессиональный подход и доступные цены.');
+INSERT INTO reviews (request_id, user_id, author, text) VALUES
+(1, 1, 'Администратор', 'Отличный сервис! Быстро и качественно отремонтировали мой холодильник.'),
+(2, 2, 'Клиент', 'Очень довольна ремонтом смартфона. Спасибо!'),
+(3, 2, 'Клиент', 'Профессиональный подход и доступные цены.');

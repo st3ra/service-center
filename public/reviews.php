@@ -2,7 +2,7 @@
 require_once 'includes/header.php';
 require_once 'includes/db.php';
 
-$reviews = $pdo->query('SELECT * FROM reviews')->fetchAll();
+$reviews = $pdo->query('SELECT r.*, u.name AS user_name FROM reviews r LEFT JOIN users u ON r.user_id = u.id')->fetchAll();
 ?>
 <h1>Отзывы</h1>
 <div class="row">
@@ -10,7 +10,7 @@ $reviews = $pdo->query('SELECT * FROM reviews')->fetchAll();
         <div class="col-md-4">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title"><?php echo $review['author']; ?></h5>
+                    <h5 class="card-title"><?php echo htmlspecialchars($review['user_name'] ?? $review['author']); ?></h5>
                     <p class="card-text"><?php echo $review['text']; ?></p>
                     <p class="card-text"><small class="text-muted"><?php echo $review['created_at']; ?></small></p>
                 </div>
