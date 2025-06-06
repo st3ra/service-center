@@ -2,71 +2,88 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+$current_page = basename($_SERVER['SCRIPT_NAME']);
 ?>
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сервисный центр</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="/assets/css/style.css" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Сервисный центр</title>
+
+  <!-- Favicons -->
+  <link href="/images/favicon.png" rel="icon">
+  <link href="/images/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="/assets/css/main.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="/assets/css/style.css?v=<?php echo time(); ?>" rel="stylesheet">
+
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container">
-                <a class="navbar-brand" href="/">Сервисный центр</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/services.php">Услуги</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/contacts.php">Контакты</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about.php">О нас</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/reviews.php">Отзывы</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav" id="auth-nav">
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/profile.php">Профиль</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-action="logout">Выйти</a>
-                            </li>
-                        <?php else: ?>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/login.php">Вход</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/register.php">Регистрация</a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <main class="container mt-4">
-        <div id="notification" class="alert" style="display:none;"></div>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <!-- Custom JS -->
-    <script src="/assets/js/auth.js"></script>
+
+<body class="<?= basename($_SERVER['SCRIPT_NAME'], '.php') ?>-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
+
+      <a href="/" class="logo d-flex align-items-center">
+        <h1 class="sitename">Сервисный центр</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+            <li><a href="/" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Главная</a></li>
+            <li><a href="/services.php" class="<?= ($current_page == 'services.php') ? 'active' : '' ?>">Услуги</a></li>
+            <li><a href="/contacts.php" class="<?= ($current_page == 'contacts.php') ? 'active' : '' ?>">Контакты</a></li>
+            <li><a href="/about.php" class="<?= ($current_page == 'about.php') ? 'active' : '' ?>">О нас</a></li>
+            <li><a href="/reviews.php" class="<?= ($current_page == 'reviews.php') ? 'active' : '' ?>">Отзывы</a></li>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <li><a href="/profile.php" class="<?= ($current_page == 'profile.php') ? 'active' : '' ?>">Профиль</a></li>
+                <li><a href="#" data-action="logout">Выйти</a></li>
+            <?php else: ?>
+                <li><a href="/login.php" class="<?= ($current_page == 'login.php') ? 'active' : '' ?>">Вход</a></li>
+                <li><a href="/register.php" class="<?= ($current_page == 'register.php') ? 'active' : '' ?>">Регистрация</a></li>
+            <?php endif; ?>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+    </div>
+  </header>
+  <main class="main">
+    <?php
+        $notification_message = '';
+        $notification_type = '';
+        if (isset($_SESSION['notification'])) {
+            $notification_message = htmlspecialchars($_SESSION['notification']['message']);
+            $notification_type = $_SESSION['notification']['type'] === 'success' ? 'success' : 'error';
+            unset($_SESSION['notification']);
+        }
+    ?>
+    <div class="container-fluid" style="position: relative; z-index: 1050;">
+        <div
+            id="notification"
+            class="alert"
+            style="display:none; position: fixed; top: 90px; left: 50%; transform: translateX(-50%); max-width: 80%;"
+            data-message="<?= $notification_message ?>"
+            data-type="<?= $notification_type ?>"
+        ></div>
+    </div>
+  </main>
+
 </body>
-</html>
+</html> 

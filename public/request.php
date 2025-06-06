@@ -204,7 +204,28 @@ if (!$request) {
         echo json_encode(['errors' => ['general' => 'Заявка не найдена или доступ запрещён']]);
         exit;
     }
-    die('Заявка не найдена или доступ запрещён');
+    $_SESSION['notification'] = [
+        'type' => 'error',
+        'message' => 'Заявка не найдена или у вас нет прав для её просмотра.'
+    ];
+    header('Location: /');
+    exit;
+}
+
+// Fetch Service details
+$service = null;
+if (isset($request['service_id'])) {
+    $stmt = $pdo->prepare('SELECT * FROM services WHERE id = ?');
+    $stmt->execute([$request['service_id']]);
+    $service = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Fetch User details for the request, if not a guest view
+$user = null;
+if (!$is_guest_view && isset($_SESSION['user_id'])) {
+    $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
+    $stmt->execute([$_SESSION['user_id']]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 $stmt = $pdo->prepare('SELECT id, file_path FROM request_files WHERE request_id = ?');
@@ -269,61 +290,437 @@ if (isset($request['id'])) {
 require_once 'includes/header.php';
 ?>
 
-<h1>Заявка #<?php echo $request['id']; ?></h1>
+<main class="main">
 
-<div id="notification" class="alert" style="display:none;"></div>
+  <!-- Page Title -->
+  <div class="page-title" data-aos="fade-up">
+    <div class="container">
+       <div class="section-title">
+          <span class="description-title">Детали заявки</span>
+          <h2>Заявка №<?= htmlspecialchars($request['id']) ?></h2>
+       </div>
+    </div>
+  </div><!-- End Page Title -->
 
-<div class="card mb-4">
+  <!-- Request Details Section -->
+  <section id="request-details" class="request-details section">
+    <div class="container">
+
+      <div class="row gy-4">
+
+        <!-- Main Request Info -->
+        <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+          
+          <!-- Request View -->
+          <div id="request-view-container">
+            <div class="request-main-card">
+              <div class="card-header">
+                <h3>Информация о заявке</h3>
+                <div class="status-badge status-<?= htmlspecialchars(strtolower($request['status'])) ?>">
+                  <?= htmlspecialchars(ucfirst($request['status'])) ?>
+                </div>
+              </div>
     <div class="card-body">
-        <h5 class="card-title">Информация о заявке</h5>
-        <div id="request-view">
-            <p><strong>Услуга:</strong> <?php echo htmlspecialchars($request['service_name']); ?></p>
-            <p><strong>Статус:</strong> <?php echo htmlspecialchars($request['status']); ?></p>
-            <p><strong>Дата создания:</strong> <?php echo htmlspecialchars($request['created_at']); ?></p>
-            <div id="description-container">
-                <p><strong>Описание:</strong> <span id="description-text"><?php echo htmlspecialchars($request['description'] ?: 'Отсутствует'); ?></span></p>
+                <div class="info-item">
+                  <strong>Дата создания:</strong>
+                  <span><?= date('d.m.Y H:i', strtotime($request['created_at'])) ?></span>
+                </div>
+                <div class="info-item description-item">
+                  <strong>Описание проблемы:</strong>
+                  <p id="view-description"><?= nl2br(htmlspecialchars($request['description'])) ?></p>
             </div>
-            <h6>Файлы:</h6>
-            <div id="file-list" class="mb-3">
-                <?php if (empty($files)): ?>
-                    <p>Файлы отсутствуют</p>
+
+                <div class="info-item">
+                  <strong>Прикрепленные файлы:</strong>
+                  <div class="attached-files-container" id="view-files">
+                    <?php foreach ($files as $file): 
+                      $file_path = htmlspecialchars($file['file_path']);
+                      $file_name = basename($file_path);
+                      $is_image = preg_match('/\.(jpg|jpeg|png|gif)$/i', $file_path);
+                    ?>
+                    <div class="file-item" data-file-id="<?= $file['id'] ?>">
+                      <?php if ($is_image): ?>
+                        <a href="/<?= $file_path ?>" class="glightbox" data-gallery="request-images">
+                          <img src="/<?= $file_path ?>" alt="<?= $file_name ?>" class="file-preview-thumbnail">
+                          <span><?= $file_name ?></span>
+                        </a>
                 <?php else: ?>
-                    <?php foreach ($files as $file): ?>
-                        <div class="file-item mb-2" data-file-id="<?php echo $file['id']; ?>">
-                            <?php if (preg_match('/\.(jpg|png)$/i', $file['file_path'])): ?>
-                                <img src="/<?php echo htmlspecialchars($file['file_path']); ?>" class="img-thumbnail me-2" style="max-width: 100px; max-height: 100px;">
-                            <?php else: ?>
-                                <a href="/<?php echo htmlspecialchars($file['file_path']); ?>" target="_blank"><?php echo htmlspecialchars(basename($file['file_path'])); ?></a>
+                        <a href="/<?= $file_path ?>" target="_blank">
+                          <i class="bi bi-file-earmark-zip"></i>
+                          <span><?= $file_name ?></span>
+                        </a>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
-                <?php endif; ?>
+                  </div>
+                </div>
+              </div>
             </div>
-            <button class="btn btn-outline-primary btn-sm" id="edit-request-btn"><i class="bi bi-pencil"></i> Редактировать</button>
-            <button class="btn btn-outline-danger btn-sm ms-2" id="delete-request-btn"><i class="bi bi-trash"></i> Удалить заявку</button>
+          </div>
+          <!-- End Request View -->
+
+          <!-- Request Edit Form -->
+          <div id="request-edit-container" style="display: none;">
+            <div class="request-main-card">
+              <div class="card-header">
+                <h3>Редактирование заявки</h3>
+              </div>
+              <div class="card-body">
+                <form id="edit-request-form" novalidate>
+                  <div class="info-item description-item">
+                    <label for="edit-description" class="form-label"><strong>Описание проблемы:</strong></label>
+                    <textarea id="edit-description" name="description" class="form-control" rows="5" required><?= htmlspecialchars($request['description']) ?></textarea>
+                    <div class="invalid-feedback">Пожалуйста, введите описание.</div>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Управление файлами:</strong>
+                    <div id="edit-files-list" class="mb-3">
+                      <!-- Existing files with delete checkboxes will be populated by JS -->
+                    </div>
+                    
+                    <label for="add-files" class="form-label"><strong>Добавить новые файлы:</strong></label>
+                    <div class="file-upload-wrapper">
+                      <input type="file" id="add-files-input" class="form-control" multiple accept=".jpg,.png,.pdf">
+                      <label for="add-files-input" class="primary-btn">Выберите файлы...</label>
+                    </div>
+                    <div id="new-files-preview" class="mt-3"></div>
+                  </div>
+                  
+                  <div id="edit-form-notification" class="alert" style="display:none; margin-bottom: 20px;"></div>
+
+                  <div class="d-flex justify-content-end gap-2">
+                    <button type="button" id="cancel-edit-btn" class="btn danger-btn">Отмена</button>
+                    <button type="submit" class="btn primary-btn">Сохранить изменения</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <!-- End Request Edit Form -->
+
+          <?php if ($can_leave_review): ?>
+          <div class="review-form-card mt-4" data-aos="fade-up" data-aos-delay="200">
+              <h3>Оставить отзыв</h3>
+              <form action="" method="post">
+                  <input type="hidden" name="request_id" value="<?= $request_id ?>">
+                  <textarea name="review_text" class="form-control" rows="4" placeholder="Поделитесь вашим мнением о проделанной работе..." required><?= htmlspecialchars($review_text) ?></textarea>
+                  <?php if ($review_error): ?>
+                      <div class="alert alert-danger mt-2"><?= $review_error ?></div>
+                  <?php endif; ?>
+                  <button type="submit" class="primary-btn mt-3">Отправить отзыв</button>
+              </form>
+          </div>
+          <?php elseif ($review): ?>
+          <div class="review-display-card mt-4" data-aos="fade-up" data-aos-delay="200">
+              <h3>Ваш отзыв</h3>
+              <p>"<?= nl2br(htmlspecialchars($review['text'])) ?>"</p>
+              <small>Оставлен: <?= date('d.m.Y', strtotime($review['created_at'])) ?></small>
+          </div>
+          <?php endif; ?>
+
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+          <?php if (!$is_guest_view && isset($user)): ?>
+          <div class="sidebar-card">
+            <h4><i class="bi bi-person-circle"></i> Клиент</h4>
+            <ul class="info-list">
+              <li><strong>ФИО:</strong> <?= htmlspecialchars($user['name']) ?></li>
+              <li><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></li>
+              <li><strong>Телефон:</strong> <?= htmlspecialchars($user['phone']) ?></li>
+            </ul>
+          </div>
+          <?php endif; ?>
+
+          <div class="sidebar-card">
+            <h4><i class="bi bi-tools"></i> Услуга</h4>
+            <?php if ($service): ?>
+            <ul class="info-list">
+              <li><strong>Название:</strong> <?= htmlspecialchars($service['name']) ?></li>
+              <li><strong>Цена:</strong> <?= htmlspecialchars($service['price']) ?> руб.</li>
+            </ul>
+            <?php else: ?>
+            <p>Информация об услуге не найдена.</p>
+                <?php endif; ?>
+          </div>
+          
+           <?php if (!$is_guest_view && $request['status'] !== 'completed' && $request['status'] !== 'cancelled'): ?>
+            <div class="sidebar-card actions-card">
+                <h4><i class="bi bi-pencil-square"></i> Действия</h4>
+                <div id="actions-buttons-container">
+                    <button id="edit-request-btn" class="btn primary-btn w-100 mb-2">Редактировать</button>
+                    <button id="delete-request-btn" class="btn danger-btn w-100" data-id="<?= $request_id ?>">Удалить заявку</button>
+                </div>
+            </div>
+            <?php endif; ?>
+
+        </div>
+
         </div>
     </div>
-</div>
+  </section>
 
-<?php
-if ($review) {
-    echo '<div class="card mb-4"><div class="card-body">';
-    echo '<h5 class="card-title">Ваш отзыв</h5>';
-    echo '<p class="mb-1"><b>Текст:</b> ' . htmlspecialchars($review['text']) . '</p>';
-    echo '<p class="mb-0 text-muted"><small>Оставлен: ' . htmlspecialchars($review['created_at']) . '</small></p>';
-    echo '</div></div>';
-} elseif ($can_leave_review) {
-    echo '<div class="card mb-4"><div class="card-body">';
-    echo '<h5 class="card-title">Оставить отзыв</h5>';
-    if ($review_error) echo '<div class="alert alert-danger">' . htmlspecialchars($review_error) . '</div>';
-    if ($review_success) echo '<div class="alert alert-success">' . htmlspecialchars($review_success) . '</div>';
-    echo '<form method="post"><div class="mb-3">';
-    echo '<textarea name="review_text" class="form-control" rows="4" maxlength="1000" required placeholder="Ваш отзыв...">' . htmlspecialchars($review_text) . '</textarea>';
-    echo '</div><button type="submit" class="btn btn-success">Отправить отзыв</button></form>';
-    echo '</div></div>';
-}
-?>
-<a href="profile.php" class="btn btn-outline-secondary">Назад к профилю</a>
+</main>
+
 <?php
 require_once 'includes/footer.php';
 ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const viewContainer = document.getElementById('request-view-container');
+    const editContainer = document.getElementById('request-edit-container');
+    const editBtn = document.getElementById('edit-request-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    const editForm = document.getElementById('edit-request-form');
+    const viewFilesContainer = document.getElementById('view-files');
+    const editFilesList = document.getElementById('edit-files-list');
+    const actionsButtonsContainer = document.getElementById('actions-buttons-container');
+    const deleteBtn = document.getElementById('delete-request-btn');
+    const newFilesPreview = document.getElementById('new-files-preview');
+    const fileInput = document.getElementById('add-files-input');
+
+    let existingFilesToDelete = new Set();
+    let newStagedFiles = [];
+
+    function setActionsLocked(isLocked) {
+        if (!actionsButtonsContainer) return;
+        
+        if (isLocked) {
+            actionsButtonsContainer.classList.add('actions-locked');
+            if (editBtn) editBtn.disabled = true;
+            if (deleteBtn) deleteBtn.disabled = true;
+        } else {
+            actionsButtonsContainer.classList.remove('actions-locked');
+            if (editBtn) editBtn.disabled = false;
+            if (deleteBtn) deleteBtn.disabled = false;
+        }
+    }
+
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            existingFilesToDelete.clear();
+            newStagedFiles = [];
+            newFilesPreview.innerHTML = '';
+            fileInput.value = '';
+            // Populate file list for editing with delete icons
+            editFilesList.innerHTML = '';
+            const currentFiles = viewFilesContainer.querySelectorAll('.file-item');
+
+            if (currentFiles.length > 0) {
+                currentFiles.forEach(fileNode => {
+                    const fileId = fileNode.getAttribute('data-file-id');
+                    const fileLink = fileNode.querySelector('a');
+                    const isImage = fileNode.querySelector('.file-preview-thumbnail');
+                    const fileName = fileNode.querySelector('span').textContent;
+
+                    let previewHtml = isImage 
+                        ? `<img src="${fileLink.href}" alt="${fileName}" class="file-preview-thumbnail">`
+                        : `<i class="bi bi-file-earmark-zip"></i>`;
+
+                    const fileItemHtml = `
+                        <div class="edit-file-item" data-file-id="${fileId}">
+                            <div class="edit-file-info">
+                                ${previewHtml}
+                                <span>${fileName}</span>
+                            </div>
+                            <button type="button" class="delete-file-btn"><i class="bi bi-trash"></i></button>
+                        </div>
+                    `;
+                    editFilesList.innerHTML += fileItemHtml;
+                });
+            } else {
+                editFilesList.innerHTML = '<p>Прикрепленных файлов нет.</p>';
+            }
+           
+            viewContainer.style.display = 'none';
+            setActionsLocked(true);
+            editContainer.style.display = 'block';
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            viewContainer.style.display = 'block';
+            setActionsLocked(false);
+            editContainer.style.display = 'none';
+        });
+    }
+
+    if(fileInput) {
+        fileInput.addEventListener('change', e => {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                newStagedFiles.push(file);
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const previewWrapper = document.createElement('div');
+                    previewWrapper.className = 'edit-file-item new-file-preview';
+                    previewWrapper.innerHTML = `
+                        <div class="edit-file-info">
+                            <img src="${event.target.result}" alt="${file.name}" class="file-preview-thumbnail">
+                            <span>${file.name}</span>
+                        </div>
+                        <button type="button" class="delete-file-btn" data-file-name="${file.name}"><i class="bi bi-trash"></i></button>
+                    `;
+                    newFilesPreview.appendChild(previewWrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+            // Clear the input to allow adding more files
+            e.target.value = ''; 
+        });
+    }
+
+    newFilesPreview.addEventListener('click', function(e) {
+        const deleteButton = e.target.closest('.delete-file-btn');
+        if(deleteButton) {
+            const fileName = deleteButton.getAttribute('data-file-name');
+            newStagedFiles = newStagedFiles.filter(f => f.name !== fileName);
+            deleteButton.closest('.new-file-preview').remove();
+        }
+    });
+
+    editFilesList.addEventListener('click', function(e) {
+        const deleteButton = e.target.closest('.delete-file-btn');
+        if (deleteButton) {
+            const fileItem = deleteButton.closest('.edit-file-item');
+            const fileId = fileItem.getAttribute('data-file-id');
+            
+            if (existingFilesToDelete.has(fileId)) {
+                existingFilesToDelete.delete(fileId);
+                fileItem.classList.remove('marked-for-deletion');
+            } else {
+                existingFilesToDelete.add(fileId);
+                fileItem.classList.add('marked-for-deletion');
+            }
+        }
+    });
+
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.delete('files[]'); // Remove empty FileList from original input
+            formData.append('action', 'edit_request');
+            formData.append('files_to_delete', JSON.stringify(Array.from(existingFilesToDelete)));
+            
+            // Append newly staged files
+            newStagedFiles.forEach(file => {
+                formData.append('files[]', file, file.name);
+            });
+
+            const notification = document.getElementById('edit-form-notification');
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.innerHTML = 'Сохранение...';
+            submitButton.disabled = true;
+
+            fetch('/request.php?id=<?= $request_id ?>', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('view-description').innerHTML = data.description.replace(/\\r\\n|\\n|\\r/g, '<br>');
+                    
+                    let filesHtml = '';
+                    if (data.files && data.files.length > 0) {
+                        data.files.forEach(file => {
+                            const filePath = file.file_path;
+                            const fileName = filePath.split('/').pop();
+                            const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
+                            
+                            filesHtml += `<div class="file-item" data-file-id="${file.id}">`;
+                            if (isImage) {
+                                filesHtml += `<a href="/${filePath}" class="glightbox" data-gallery="request-images">
+                                                <img src="/${filePath}" alt="${fileName}" class="file-preview-thumbnail">
+                                                <span>${fileName}</span>
+                                            </a>`;
+                            } else {
+                                filesHtml += `<a href="/${filePath}" target="_blank">
+                                                <i class="bi bi-file-earmark-zip"></i>
+                                                <span>${fileName}</span>
+                                            </a>`;
+                            }
+                            filesHtml += `</div>`;
+                        });
+                    }
+                    viewFilesContainer.innerHTML = filesHtml;
+
+                    if (typeof GLightbox === 'function') {
+                       const lightbox = GLightbox({ selector: '.glightbox' });
+                    }
+                    
+                    viewContainer.style.display = 'block';
+                    setActionsLocked(false);
+                    editContainer.style.display = 'none';
+                    notification.style.display = 'none';
+                    
+                } else if (data.errors) {
+                    let errorHtml = '<ul>';
+                    for (const key in data.errors) {
+                        errorHtml += '<li>' + (Array.isArray(data.errors[key]) ? data.errors[key].join(', ') : data.errors[key]) + '</li>';
+                    }
+                    errorHtml += '</ul>';
+                    notification.className = 'alert alert-danger';
+                    notification.innerHTML = errorHtml;
+                    notification.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                notification.className = 'alert alert-danger';
+                notification.innerHTML = 'Произошла ошибка при отправке. Попробуйте снова.';
+                notification.style.display = 'block';
+            })
+            .finally(() => {
+                 submitButton.innerHTML = originalButtonText;
+                 submitButton.disabled = false;
+            });
+        });
+    }
+
+    // Delete Logic for the whole request
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function () {
+            // Check if edit mode is active, if so, do nothing.
+            if (editContainer.style.display === 'block') {
+                return;
+            }
+            if (confirm('Вы уверены, что хотите удалить эту заявку? Это действие необратимо.')) {
+                const requestId = this.getAttribute('data-id');
+                fetch('/request.php?id=' + requestId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: 'action=delete_request'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.success);
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        }
+                    } else if (data.errors && data.errors.general) {
+                        alert('Ошибка: ' + data.errors.general);
+                    } else {
+                        alert('Произошла неизвестная ошибка.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ошибка при отправке запроса.');
+                });
+            }
+        });
+    }
+});
+</script>

@@ -33,19 +33,8 @@ if (!$user) {
     die('Пользователь не найден');
 }
 
-$user_data = ['name' => $user['name'] ?? '', 'phone' => $user['phone'] ?? '', 'email' => $user['email'] ?? ''];
-$errors = [];
-$success = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $result = handle_profile_edit($pdo);
-    $errors = $result['errors'] ?? [];
-    $success = $result['success'] ?? '';
-    $user_data = $result['user_data'] ?? $user_data;
-}
-
 $stmt = $pdo->prepare('
-    SELECT r.id, r.service_id, r.status, r.created_at, s.name AS service_name
+    SELECT r.id, r.status, r.created_at, s.name AS service_name
     FROM requests r
     JOIN services s ON r.service_id = s.id
     WHERE r.user_id = ?
@@ -55,72 +44,115 @@ $stmt->execute([$_SESSION['user_id']]);
 $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require_once 'includes/header.php';
+
+function get_status_translation(string $status): string {
+    $translations = [
+        'new' => 'Новая',
+        'in_progress' => 'В работе',
+        'completed' => 'Выполнена',
+        'cancelled' => 'Отменена',
+        'pending' => 'В ожидании'
+    ];
+    return $translations[$status] ?? ucfirst($status);
+}
 ?>
 
-<h1>Профиль</h1>
+<main class="main">
 
-<div id="notification" class="alert" style="display:none;"></div>
-
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Личные данные</h5>
-        <div id="profile-view">
-            <p><strong>ФИО:</strong> <?php echo htmlspecialchars($user_data['name']); ?></p>
-            <p><strong>Телефон:</strong> <?php echo htmlspecialchars($user_data['phone']); ?></p>
-            <p><strong>Email:</strong> <?php echo htmlspecialchars($user_data['email']); ?></p>
-            <button class="btn btn-outline-primary btn-sm" id="edit-profile-btn"><i class="bi bi-pencil"></i> Редактировать</button>
-        </div>
-        <form id="profile-edit-form" style="display:none;">
-            <div class="mb-3">
-                <label for="name" class="form-label">ФИО</label>
-                <input type="text" class="form-control <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" id="name" name="name" value="<?php echo htmlspecialchars($user_data['name']); ?>" required>
-                <?php if (isset($errors['name'])): ?>
-                    <div class="invalid-feedback"><?php echo $errors['name']; ?></div>
-                <?php endif; ?>
-            </div>
-            <div class="mb-3">
-                <label for="phone" class="form-label">Телефон</label>
-                <input type="text" class="form-control <?php echo isset($errors['phone']) ? 'is-invalid' : ''; ?>" id="phone" name="phone" value="<?php echo htmlspecialchars($user_data['phone']); ?>" required>
-                <?php if (isset($errors['phone'])): ?>
-                    <div class="invalid-feedback"><?php echo $errors['phone']; ?></div>
-                <?php endif; ?>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" id="email" name="email" value="<?php echo htmlspecialchars($user_data['email']); ?>" required>
-                <?php if (isset($errors['email'])): ?>
-                    <div class="invalid-feedback"><?php echo $errors['email']; ?></div>
-                <?php endif; ?>
-            </div>
-            <button type="submit" class="btn btn-primary">Сохранить</button>
-            <button type="button" class="btn btn-secondary" id="cancel-edit-btn">Отмена</button>
-        </form>
+  <!-- Page Title -->
+  <div class="page-title" data-aos="fade-up">
+    <div class="container">
+       <div class="section-title">
+          <span class="description-title">Личный кабинет</span>
+          <h2>Профиль пользователя</h2>
+       </div>
     </div>
-</div>
+  </div><!-- End Page Title -->
 
-<h2>Мои заявки</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Услуга</th>
-            <th>Статус</th>
-            <th>Дата</th>
-            <th>Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($requests as $request): ?>
-            <tr>
-                <td><?php echo $request['id']; ?></td>
-                <td><?php echo htmlspecialchars($request['service_name']); ?></td>
-                <td><?php echo htmlspecialchars($request['status']); ?></td>
-                <td><?php echo htmlspecialchars($request['created_at']); ?></td>
-                <td><a href="request.php?id=<?php echo $request['id']; ?>" class="btn btn-outline-primary btn-sm">Подробнее</a></td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+  <!-- Profile Section -->
+  <section id="profile-section" class="profile-section section">
+    <div class="container">
+        <div class="row gy-4 justify-content-center">
+            <div class="col-lg-10" data-aos="fade-up" data-aos-delay="100">
+                <div class="request-main-card">
+                    <!-- Profile Info Section -->
+                    <div id="profile-view" class="p-4 border-bottom position-relative">
+                         <div class="mb-3">
+                             <h4 class="m-0"><i class="bi bi-person-circle me-2"></i>Личные данные</h4>
+                         </div>
+                        <ul class="info-list">
+                            <li><strong>ФИО:</strong> <span id="view-name"><?= htmlspecialchars($user['name']) ?></span></li>
+                            <li><strong>Телефон:</strong> <span id="view-phone"><?= htmlspecialchars($user['phone']) ?></span></li>
+                            <li><strong>Email:</strong> <span id="view-email"><?= htmlspecialchars($user['email']) ?></span></li>
+                        </ul>
+                        <button id="edit-profile-btn" class="primary-btn profile-edit-btn">Редактировать</button>
+                    </div>
+                    <!-- Profile Edit Form (Initially Hidden) -->
+                    <form id="profile-edit-form" class="php-request-form p-4 border-bottom" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="m-0"><i class="bi bi-pencil-square me-2"></i>Редактирование</h4>
+                        </div>
+                        <div id="edit-notification" class="alert" style="display:none; margin-bottom: 20px;"></div>
+                        <div class="row gy-3">
+                             <div class="col-12">
+                                <label for="name" class="form-label">ФИО</label>
+                                <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($user['name']) ?>" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="phone" class="form-label">Телефон</label>
+                                <input type="text" class="form-control" id="phone" name="phone" value="<?= htmlspecialchars($user['phone']) ?>" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" required>
+                            </div>
+                            <div class="col-12 d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" id="cancel-edit-btn" class="btn danger-btn">Отмена</button>
+                                <button type="submit" class="btn primary-btn">Сохранить</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Requests List Section -->
+                    <div class="p-4">
+                        <div class="section-title mb-4">
+                           <span class="description-title">История</span>
+                           <h2>Мои заявки</h2>
+                        </div>
+                        <?php if (empty($requests)): ?>
+                            <div class="text-center p-4 border-top">
+                              <p>У вас еще нет заявок.</p>
+                              <a href="/services.php" class="primary-btn">Посмотреть услуги</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="requests-list">
+                                <?php foreach ($requests as $request): ?>
+                                    <div class="request-item">
+                                        <div class="request-item-info">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <a href="request.php?id=<?= $request['id'] ?>" class="request-id me-3">Заявка #<?= $request['id'] ?></a>
+                                                <span class="status-badge status-<?= htmlspecialchars(strtolower($request['status'])) ?>">
+                                                  <?= get_status_translation($request['status']) ?>
+                                                </span>
+                                            </div>
+                                            <p class="request-service"><?= htmlspecialchars($request['service_name']) ?></p>
+                                            <p class="request-date">Создана: <?= date('d.m.Y', strtotime($request['created_at'])) ?></p>
+                                        </div>
+                                        <div class="request-item-status">
+                                            <a href="request.php?id=<?= $request['id'] ?>" class="primary-btn">Подробнее</a>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </section>
+
+</main>
 
 <?php
 require_once 'includes/footer.php';

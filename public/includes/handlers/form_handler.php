@@ -135,8 +135,7 @@ function handle_form_submission($pdo, $service_id, $user) {
 
             $pdo->commit();
             $success = 'Заявка успешно отправлена!';
-            error_log('Request saved successfully: ID=' . $request_id);
-
+            
             // Сохраняем ID заявки в сессию для неавторизованных пользователей
             if (!$user && $request_id) {
                 if (session_status() === PHP_SESSION_NONE) {

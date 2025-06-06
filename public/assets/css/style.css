@@ -1,4 +1,915 @@
-/* Custom styles */
+/*
+*
+* =================================================================
+*                           CUSTOM STYLES
+* =================================================================
+*
+*/
+
+/*--------------------------------------------------------------
+# General & Shared
+--------------------------------------------------------------*/
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Lato', sans-serif;
+    padding-top: 80px; /* Offset for fixed header */
 }
+
+/* Font Overrides */
+:root {
+  --default-font: 'Lato', sans-serif;
+  --heading-font: 'Montserrat', sans-serif;
+  --nav-font: 'Montserrat', sans-serif;
+
+  /* Custom Color Additions */
+  --error-color: #df1529; /* Red for errors, delete buttons */
+  --success-color: #059652; /* Green for success messages */
+}
+
+/* Hide Swiper.js config block used for initialization */
+.swiper-config {
+  display: none;
+}
+
+/* Secondary (Outline) Button Style */
+.secondary-btn {
+  font-family: var(--nav-font);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 25px;
+  border-radius: 4px;
+  transition: 0.5s;
+  color: var(--default-color);
+  background-color: transparent;
+  border: 1px solid var(--accent-color);
+  text-align: center;
+}
+.secondary-btn:hover {
+  background-color: var(--accent-color);
+  color: var(--contrast-color);
+}
+.secondary-btn i {
+  margin-left: 8px;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+/*--------------------------------------------------------------
+# Unified Button Styles
+--------------------------------------------------------------*/
+.primary-btn,
+.danger-btn {
+  display: inline-block;
+  font-family: var(--nav-font);
+  font-weight: 500;
+  padding: 10px 25px;
+  border-radius: 4px;
+  border-width: 2px;
+  border-style: solid;
+  transition: all 0.3s ease-in-out;
+  text-align: center;
+}
+
+/* Primary Button (Blue, Outline -> Solid) */
+.primary-btn {
+  background-color: transparent;
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+.primary-btn:hover {
+  background-color: var(--accent-color);
+  color: var(--contrast-color);
+}
+
+/* Danger Button (Red, Outline -> Solid) */
+.danger-btn {
+  background-color: transparent;
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+.danger-btn:hover {
+  background-color: var(--error-color);
+  color: var(--contrast-color);
+}
+
+/*--------------------------------------------------------------
+# Header
+--------------------------------------------------------------*/
+/* Sticky, Transparent Header Styles */
+#header {
+  transition: background-color 0.3s ease-in-out;
+}
+#header.fixed-top {
+  background-color: rgba(7, 13, 26, 0.7); /* Semi-transparent dark background */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.scrolled #header.fixed-top {
+  background-color: rgb(7, 13, 26); /* Opaque dark background on scroll */
+}
+
+/* Force Desktop Navigation on large screens */
+@media (min-width: 992px) {
+  .mobile-nav-toggle {
+    display: none !important;
+  }
+  .navmenu {
+    position: static !important;
+    right: auto !important;
+    width: auto !important;
+    background: none !important;
+    transition: none !important;
+    overflow: visible !important;
+  }
+  .navmenu ul {
+    display: flex !important;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .navmenu a, .navmenu a:focus {
+    padding: 10px 15px;
+    white-space: nowrap;
+  }
+  body.mobile-nav-active .navmenu {
+    position: static !important;
+  }
+  body.mobile-nav-active {
+    overflow: auto !important;
+  }
+}
+
+/*--------------------------------------------------------------
+# Index Page: Hero Section
+--------------------------------------------------------------*/
+.hero .hero-visual,
+.hero .hero-visual .image-wrapper {
+  overflow: visible; /* Prevent clipping of floating elements */
+}
+
+/*--------------------------------------------------------------
+# Index Page: Popular Services
+--------------------------------------------------------------*/
+.service-card .service-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 70px; /* Fallback height for ~3 lines */
+}
+
+/*--------------------------------------------------------------
+# Index Page: Team Slider
+--------------------------------------------------------------*/
+#team .swiper-nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+#team .swiper-nav-buttons .swiper-button-prev,
+#team .swiper-nav-buttons .swiper-button-next {
+  position: static;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  background-color: transparent;
+  border: 1px solid var(--accent-color);
+  border-radius: 50%;
+  box-shadow: none;
+  color: var(--accent-color);
+  transition: all 0.3s ease;
+}
+#team .swiper-nav-buttons .swiper-button-prev:hover,
+#team .swiper-nav-buttons .swiper-button-next:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--contrast-color);
+}
+#team .swiper-nav-buttons .swiper-button-prev::after,
+#team .swiper-nav-buttons .swiper-button-next::after {
+  font-size: 16px;
+  font-weight: 600;
+}
+#team .swiper-pagination .swiper-pagination-bullet {
+  background-color: var(--default-color);
+  opacity: 0.6;
+}
+#team .swiper-pagination .swiper-pagination-bullet-active {
+  background-color: var(--accent-color);
+  opacity: 1;
+}
+
+/* Team Member Card Equal Height & Styling */
+.team .swiper-slide {
+  height: auto; /* Required for Swiper to correctly calculate height with align-items: stretch */
+}
+
+.team .team-member {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.team .team-member:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(var(--accent-color-rgb), 0.1);
+    border-color: var(--accent-color);
+}
+
+.team .member-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* This makes the content area stretch to fill available space */
+  padding: 25px;
+}
+
+/*--------------------------------------------------------------
+# Services Page
+--------------------------------------------------------------*/
+#services-list.section {
+  padding-top: 0;
+}
+
+/* Styled Tabs */
+#services-list .nav-pills {
+  margin-bottom: 30px;
+}
+#services-list .nav-pills .nav-link {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--default-color);
+  margin: 0 5px 10px 5px;
+  border-radius: 50px;
+  padding: 10px 25px;
+  transition: all 0.3s ease-in-out;
+}
+#services-list .nav-pills .nav-link.active,
+#services-list .nav-pills .nav-link:hover {
+  background-color: var(--accent-color);
+  color: var(--contrast-color);
+  border-color: var(--accent-color);
+}
+
+/* Service Card with Image */
+.service-item-with-image {
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+}
+.service-item-with-image:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-color);
+}
+.service-item-with-image .service-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+.service-item-with-image .service-content {
+  padding: 25px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+.service-item-with-image .service-content h3 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+.service-item-with-image .service-content .service-description {
+  color: var(--default-color);
+  margin-bottom: 15px;
+  flex-grow: 1;
+}
+.service-item-with-image .service-content .service-price {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--heading-color);
+  margin-bottom: 15px;
+}
+.service-item-with-image .service-content .primary-btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/*--------------------------------------------------------------
+# Form Page (request-form)
+--------------------------------------------------------------*/
+.form-section .php-request-form .form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.form-section .php-request-form .form-control {
+  height: 48px;
+  padding: 10px 15px;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-color);
+  color: var(--default-color);
+  transition: all 0.3s;
+}
+.form-section .php-request-form .form-control:focus {
+  border-color: var(--accent-color);
+  background-color: var(--background-color);
+}
+.form-section .php-request-form .form-control.readonly-styled {
+  background-color: transparent;
+  border: none;
+  padding-left: 0;
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
+}
+.form-section .php-request-form textarea.form-control {
+  height: auto;
+  min-height: 120px;
+}
+/* File Upload Button - Now uses .primary-btn class */
+.form-section .php-request-form input[type="file"] {
+  display: none;
+}
+.form-section .php-request-form .file-name {
+  margin-left: 15px;
+  font-style: italic;
+}
+/* Form Messages */
+.form-section .php-request-form .loading {
+  display: none;
+  padding: 15px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 600;
+  border-radius: 4px;
+  background: var(--surface-color);
+}
+
+/* Submit Button */
+.form-section .php-request-form button[type="submit"] {
+    padding: 12px 30px;
+    border: 2px solid var(--accent-color);
+}
+
+/* Service Info Card (on Form Page) */
+.service-info-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  padding: 30px;
+  border-radius: 8px;
+  height: 100%;
+}
+.service-info-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.service-info-card h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+.service-info-card .service-price {
+  font-size: 18px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+.service-info-card .service-price strong,
+.service-info-card h2 {
+  color: var(--heading-color);
+}
+.service-info-card .service-description-box { margin-bottom: 20px; }
+.service-info-card .card-footer-note {
+  font-style: italic;
+  color: var(--default-color);
+  opacity: 0.8;
+}
+
+/*--------------------------------------------------------------
+# Auth Pages (Login/Register)
+--------------------------------------------------------------*/
+#login-section.section,
+#register-section.section {
+  padding-top: 30px;
+}
+
+.auth-form-card .form-label {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.auth-form-card .form-control {
+  font-size: 16px;
+  padding: 12px 15px;
+  height: 50px;
+}
+
+.auth-form-card .btn {
+  font-size: 16px;
+  padding: 12px;
+}
+
+/*--------------------------------------------------------------
+# Global Notifications
+--------------------------------------------------------------*/
+.sent-message,
+.error-message {
+  display: block;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sent-message {
+  background-color: var(--success-color);
+  color: var(--contrast-color);
+}
+
+.error-message {
+  background-color: var(--error-color);
+  color: var(--contrast-color);
+}
+
+/*--------------------------------------------------------------
+# Request Details Page
+--------------------------------------------------------------*/
+.request-details .request-main-card,
+.request-details .sidebar-card,
+.request-details .review-form-card,
+.request-details .review-display-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  padding: 30px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.request-details .sidebar-card {
+    height: auto;
+}
+.request-details .request-main-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+.request-details .request-main-card h3,
+.request-details .review-form-card h3,
+.request-details .review-display-card h3 {
+  margin: 0;
+  font-size: 24px;
+}
+.request-details .sidebar-card h4 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
+}
+.status-badge.status-new { background-color: #0d6efd; }
+.status-badge.status-in_progress { background-color: #ffc107; color: #000; }
+.status-badge.status-completed { background-color: #198754; }
+.status-badge.status-cancelled { background-color: #6c757d; }
+.status-badge.status-pending { background-color: #fd7e14; }
+
+/* Content Lists and Items */
+.request-details .info-item {
+  margin-bottom: 20px;
+}
+.request-details .info-item:last-child { margin-bottom: 0; }
+.request-details .info-item strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--heading-color);
+}
+.request-details .info-item p {
+  white-space: pre-wrap;
+  background-color: var(--background-color);
+  padding: 15px;
+  border-radius: 5px;
+}
+.request-details .info-list {
+    list-style: none;
+    padding: 0;
+}
+.request-details .info-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.request-details .info-list li:last-child { border-bottom: none; }
+.request-details .info-list li strong { margin-right: 5px; }
+
+/* Attached Files (View Mode) */
+.request-details .attached-files-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+.request-details .file-item a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: var(--background-color);
+  border-radius: 5px;
+  transition: all 0.3s;
+  color: var(--default-color);
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+}
+.request-details .file-item a:hover {
+  background-color: var(--accent-color);
+  color: var(--contrast-color);
+  border-color: var(--accent-color);
+}
+.request-details .file-item .file-preview-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.request-details .file-item a i {
+  font-size: 24px;
+}
+
+/* Locked state for action buttons during edit */
+#actions-buttons-container.actions-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Edit Request Form */
+#request-edit-container .form-control {
+    background-color: var(--background-color);
+    border-color: var(--border-color);
+    color: var(--default-color);
+}
+#request-edit-container .form-control:focus {
+    background-color: var(--background-color);
+    border-color: var(--accent-color);
+    box-shadow: none;
+}
+/* Custom File Input for Edit Form */
+#request-edit-container .file-upload-wrapper {
+    position: relative;
+}
+#request-edit-container .file-upload-wrapper input[type="file"] {
+    display: none;
+}
+#request-edit-container .file-name {
+    margin-left: 15px;
+    font-style: italic;
+}
+/* Attached Files (Edit Mode) */
+#edit-files-list .edit-file-item,
+#new-files-preview .edit-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    transition: opacity 0.3s;
+}
+#edit-files-list .edit-file-item.marked-for-deletion {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+#edit-files-list .edit-file-info,
+#new-files-preview .edit-file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.edit-file-item .file-preview-thumbnail {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+#edit-files-list .delete-file-btn,
+#new-files-preview .delete-file-btn {
+    color: var(--error-color);
+    cursor: pointer;
+    font-size: 20px;
+    background: none;
+    border: none;
+}
+#edit-files-list .delete-file-btn:hover,
+#new-files-preview .delete-file-btn:hover {
+    color: red;
+}
+
+
+/* Review Form & Display */
+.request-details .review-form-card textarea {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    color: var(--default-color);
+}
+.request-details .review-form-card textarea:focus {
+    background-color: var(--background-color);
+    border-color: var(--accent-color);
+    color: var(--default-color);
+    box-shadow: none;
+}
+.request-details .review-display-card .rating {
+    margin-bottom: 10px;
+    color: #ffc107;
+}
+.request-details .review-display-card p {
+    font-style: italic;
+}
+.request-details .review-display-card small {
+    display: block;
+    text-align: right;
+    color: var(--default-color);
+    opacity: 0.7;
+}
+
+/*--------------------------------------------------------------
+# Profile Page
+--------------------------------------------------------------*/
+.profile-section .request-main-card {
+  padding: 0; /* Remove padding from the main container */
+}
+
+.profile-section .sidebar-card {
+  padding: 30px;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.profile-section .info-list {
+  list-style: none;
+  padding: 0;
+}
+.profile-section .info-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.profile-section .info-list li:last-child {
+  border-bottom: none;
+}
+.profile-section .info-list strong {
+  margin-right: 10px;
+  color: var(--heading-color);
+}
+
+.profile-section .requests-list .request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.profile-section .requests-list .request-item:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(var(--accent-color-rgb), 0.1);
+}
+
+.profile-section .requests-list .request-item-info .request-id {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--heading-color);
+  display: block;
+  margin-bottom: 5px;
+}
+.profile-section .requests-list .request-item-info .request-id:hover {
+  color: var(--accent-color);
+}
+.profile-section .requests-list .request-item-info .request-service {
+  margin-bottom: 5px;
+}
+.profile-section .requests-list .request-item-info .request-date {
+  font-size: 14px;
+  color: var(--default-color);
+  opacity: 0.8;
+  margin: 0;
+}
+
+.profile-section .requests-list .request-item-status {
+  text-align: right;
+}
+
+/* Content Lists and Items */
+.request-details .info-item {
+  margin-bottom: 20px;
+}
+
+.profile-section .profile-edit-btn {
+  position: absolute;
+  bottom: 24px; /* 1.5rem */
+  right: 24px; /* 1.5rem */
+}
+
+.profile-section .request-main-card .section-title {
+  padding-bottom: 0;
+  margin-bottom: 20px;
+}
+.profile-section .request-main-card .section-title h2 {
+    margin: 0;
+}
+
+/*--------------------------------------------------------------
+# About Page
+--------------------------------------------------------------*/
+.about-content h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.why-us .why-us-item {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    height: 100%;
+    transition: all 0.3s ease-in-out;
+}
+.why-us .why-us-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(var(--accent-color-rgb), 0.1);
+    border-color: var(--accent-color);
+}
+.why-us .why-us-item .icon {
+    margin-bottom: 20px;
+}
+.why-us .why-us-item .icon i {
+    font-size: 48px;
+    color: var(--accent-color);
+}
+.why-us .why-us-item h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.why-us .why-us-item p {
+    font-size: 15px;
+    color: var(--default-color);
+    margin-bottom: 0;
+}
+
+/*--------------------------------------------------------------
+# Reviews Page
+--------------------------------------------------------------*/
+.reviews-section .review-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--accent-color);
+}
+.reviews-section .review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(var(--accent-color-rgb), 0.1);
+}
+.reviews-section .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.reviews-section .review-author {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.reviews-section .review-author i {
+    font-size: 42px;
+    color: var(--heading-color);
+}
+.reviews-section .review-author h4 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+.reviews-section .review-meta {
+    text-align: right;
+    font-size: 14px;
+    color: var(--default-color);
+    opacity: 0.8;
+}
+.reviews-section .review-meta .service-name {
+    display: block;
+    font-style: italic;
+}
+.reviews-section .review-body p {
+    font-size: 18px;
+    line-height: 1.7;
+    font-style: italic;
+    margin: 0;
+}
+.reviews-section .review-body p::before {
+    content: '“';
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 5px;
+    color: var(--accent-color);
+}
+.reviews-section .review-body p::after {
+    content: '”';
+    font-size: 24px;
+    font-weight: bold;
+    margin-left: 5px;
+    color: var(--accent-color);
+}
+
+/*--------------------------------------------------------------
+# Page Title
+--------------------------------------------------------------*/
+.page-title {
+  padding: 0;
+}
+.page-title .section-title {
+  padding-bottom: 0;
+  text-align: center;
+}
+
+/*--------------------------------------------------------------
+# Contact Page
+--------------------------------------------------------------*/
+.contact .info-item {
+  background-color: var(--surface-color);
+  padding: 30px;
+  border-radius: 8px;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.contact .info-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-color);
+}
+
+.contact .info-item i {
+  font-size: 32px;
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  display: block;
+}
+
+.contact .info-item h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+#map.section {
+    padding-top: 0;
+}
+
+#yandex-map {
+    border-radius: 8px;
+}
+

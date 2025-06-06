@@ -17,8 +17,11 @@ A web application for service centers: booking, request management, analytics.
 2. **Copy and configure environment variables:**
    ```bash
    cp .env.example .env
-   # Edit .env (MySQL passwords, DB name, etc.)
    ```
+   - Edit `.env` to set your MySQL passwords, database name, etc.
+   - **Yandex Maps API Key**: For the contact page map to work, you need to provide an API key.
+     1. Get your free API key from the [Yandex Cloud Developer's Cabinet](https://developer.tech.yandex.ru/).
+     2. Add it to your `.env` file: `YANDEX_MAPS_API_KEY=your_yandex_maps_api_key_here`
 
 3. **Build and start containers:**
    ```bash

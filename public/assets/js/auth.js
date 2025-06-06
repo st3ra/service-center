@@ -13,24 +13,22 @@ $(document).ready(function() {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             dataType: 'json',
             success: function(response) {
-                $('#notification').empty().removeClass('alert-success alert-danger');
+                const $notification = $('#notification');
+                $notification.empty().removeClass('sent-message error-message').hide();
+                
                 if (response.success) {
-                    $('#notification').text(response.success).addClass('alert-success').show();
+                    $notification.html(response.success).addClass('sent-message').show();
                     $('#auth-nav').html(response.nav_html);
                     setTimeout(function() {
                         window.location.href = '/';
                     }, 1000);
                 } else if (response.errors) {
-                    var errorHtml = '<ul>';
-                    $.each(response.errors, function(key, error) {
-                        errorHtml += '<li>' + error + '</li>';
-                    });
-                    errorHtml += '</ul>';
-                    $('#notification').html(errorHtml).addClass('alert-danger').show();
+                    let errorText = response.errors.general || 'Пожалуйста, проверьте введенные данные.';
+                    $notification.html(errorText).addClass('error-message').show();
                 }
             },
             error: function(xhr, status, error) {
-                $('#notification').text('Ошибка при авторизации').addClass('alert-danger').show();
+                $('#notification').html('Ошибка при авторизации').addClass('error-message').show();
             }
         });
     });
@@ -45,24 +43,31 @@ $(document).ready(function() {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             dataType: 'json',
             success: function(response) {
-                $('#notification').empty().removeClass('alert-success alert-danger');
+                 const $notification = $('#notification');
+                $notification.empty().removeClass('sent-message error-message').hide();
+
                 if (response.success) {
-                    $('#notification').text(response.success).addClass('alert-success').show();
+                    $notification.html(response.success).addClass('sent-message').show();
                     $('#auth-nav').html(response.nav_html);
                     setTimeout(function() {
                         window.location.href = '/';
                     }, 1000);
                 } else if (response.errors) {
-                    var errorHtml = '<ul>';
-                    $.each(response.errors, function(key, error) {
-                        errorHtml += '<li>' + error + '</li>';
+                     let errorText = response.errors.general || 'Пожалуйста, проверьте введенные данные и исправьте ошибки.';
+                    $notification.html(errorText).addClass('error-message').show();
+
+                    // Display field-specific errors
+                    $('.is-invalid').removeClass('is-invalid');
+                    $('.invalid-feedback').empty();
+                    $.each(response.errors, function(key, message) {
+                        if (key !== 'general') {
+                            $(`[name=${key}]`).addClass('is-invalid').siblings('.invalid-feedback').text(message);
+                        }
                     });
-                    errorHtml += '</ul>';
-                    $('#notification').html(errorHtml).addClass('alert-danger').show();
                 }
             },
             error: function(xhr, status, error) {
-                $('#notification').text('Ошибка при регистрации').addClass('alert-danger').show();
+                $('#notification').html('Ошибка при регистрации').addClass('error-message').show();
             }
         });
     });
@@ -75,21 +80,25 @@ $(document).ready(function() {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             dataType: 'json',
             success: function(response) {
-                $('#notification').empty().removeClass('alert-success alert-danger');
+                const $notification = $('#notification');
+                $notification.empty().removeClass('sent-message error-message').hide();
+
                 if (response.success) {
                     $('#auth-nav').html(response.nav_html);
-                    $('#notification').text(response.success).addClass('alert-success').show();
+                    $notification.html(response.success).addClass('sent-message').show();
                     setTimeout(function() {
+                        // Redirect after showing the message
                         window.location.href = '/';
-                    }, 1000);
+                    }, 1500); // A bit longer to read the message
                 }
             },
             error: function(xhr, status, error) {
-                $('#notification').text('Ошибка при выходе').addClass('alert-danger').show();
+                $('#notification').html('Ошибка при выходе').addClass('error-message').show();
             }
         });
     });
 
+    // Profile page edit toggle
     $(document).on('click', '#edit-profile-btn', function() {
         $('#profile-view').hide();
         $('#profile-edit-form').show();
@@ -98,11 +107,14 @@ $(document).ready(function() {
     $(document).on('click', '#cancel-edit-btn', function() {
         $('#profile-edit-form').hide();
         $('#profile-view').show();
+        $('#edit-notification').hide(); // Also hide notifications on cancel
     });
 
     $('#profile-edit-form').on('submit', function(e) {
         e.preventDefault();
         var formData = $(this).serialize();
+        const $notification = $('#edit-notification');
+
         $.ajax({
             url: '/profile.php',
             type: 'POST',
@@ -110,29 +122,32 @@ $(document).ready(function() {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             dataType: 'json',
             success: function(response) {
-                $('#notification').empty().removeClass('alert-success alert-danger');
+                $notification.empty().removeClass('sent-message error-message').hide();
+                
                 if (response.success) {
-                    $('#notification').text(response.success).addClass('alert-success').show();
-                    $('#profile-view').html(`
-                        <p><strong>ФИО:</strong> ${response.user_data.name}</p>
-                        <p><strong>Телефон:</strong> ${response.user_data.phone}</p>
-                        <p><strong>Email:</strong> ${response.user_data.email}</p>
-                        <button class="btn btn-outline-primary btn-sm" id="edit-profile-btn"><i class="bi bi-pencil"></i> Редактировать</button>
-                    `);
-                    $('#profile-edit-form').hide();
-                    $('#profile-view').show();
-                    setTimeout(function() { $('#notification').fadeOut(); }, 2000);
+                    $notification.html(response.success).addClass('sent-message').show();
+                    
+                    // Update the view with new data
+                    $('#view-name').text(response.user_data.name);
+                    $('#view-phone').text(response.user_data.phone);
+                    $('#view-email').text(response.user_data.email);
+
+                    // Switch back to view mode after a short delay
+                    setTimeout(function() {
+                        $notification.fadeOut(function() {
+                            // This ensures the form is hidden and view is shown AFTER fadeout
+                            $('#profile-edit-form').hide();
+                            $('#profile-view').show();
+                        });
+                    }, 2000);
+
                 } else if (response.errors) {
-                    var errorHtml = '<ul>';
-                    $.each(response.errors, function(key, error) {
-                        errorHtml += '<li>' + error + '</li>';
-                    });
-                    errorHtml += '</ul>';
-                    $('#notification').html(errorHtml).addClass('alert-danger').show();
+                    let errorText = response.errors.general || 'Пожалуйста, исправьте ошибки в форме.';
+                    $notification.html(errorText).addClass('error-message').show();
                 }
             },
             error: function(xhr, status, error) {
-                $('#notification').text('Ошибка при редактировании профиля').addClass('alert-danger').show();
+                $notification.html('Ошибка при редактировании профиля').addClass('error-message').show();
             }
         });
     });
@@ -180,76 +195,6 @@ $(document).ready(function() {
         const index = $(this).data('index');
         selectedFiles.splice(index, 1);
         updateFilePreview();
-    });
-
-    $('#request-form').on('submit', function(e) {
-        e.preventDefault();
-        console.log('Request form submitted');
-        var formData = new FormData(this);
-        var serviceId = $('input[name="service_id"]').val();
-        formData.delete('files[]');
-        selectedFiles.forEach(file => {
-            formData.append('files[]', file);
-        });
-        console.log('Service ID:', serviceId);
-        console.log('FormData files:', formData.getAll('files[]'));
-        $.ajax({
-            url: '/form.php?service_id=' + encodeURIComponent(serviceId),
-            type: 'POST',
-            data: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            dataType: 'json',
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                console.log('AJAX response:', response);
-                $('#notification').empty().removeClass('alert-success alert-danger');
-                $('#request-form .is-invalid').removeClass('is-invalid');
-                $('#request-form .invalid-feedback').empty();
-                if (response.success) {
-                    if (response.is_authenticated) {
-                        sessionStorage.setItem('formSuccess', response.success);
-                        console.log('Redirecting to /request.php?id=' + response.request_id);
-                        window.location.href = '/request.php?id=' + response.request_id;
-                    } else {
-                        // Для гостя: редиректим на просмотр заявки
-                        window.location.href = '/request.php?id=' + response.request_id;
-                    }
-                } else if (response.errors) {
-                    console.log('Errors:', response.errors);
-                    $.each(response.errors, function(key, errors) {
-                        if (Array.isArray(errors)) {
-                            var errorHtml = '<ul>';
-                            $.each(errors, function(i, error) {
-                                errorHtml += '<li>' + error + '</li>';
-                            });
-                            errorHtml += '</ul>';
-                            $('#request-form [name="files[]"]').addClass('is-invalid');
-                            $('#request-form [name="files[]"]').siblings('.invalid-feedback').html(errorHtml);
-                        } else {
-                            var $input = $('#request-form [name="' + key + '"]');
-                            if ($input.length) {
-                                $input.addClass('is-invalid');
-                                $input.siblings('.invalid-feedback').text(errors);
-                            } else {
-                                var errorHtml = '<ul><li>' + errors + '</li></ul>';
-                                $('#notification').append(errorHtml).addClass('alert-danger').show();
-                            }
-                        }
-                    });
-                    if (response.form_data) {
-                        $.each(response.form_data, function(key, value) {
-                            $('#request-form [name="' + key + '"]').val(value);
-                        });
-                    }
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log('AJAX error:', status, error, xhr.responseText);
-                $('#notification').empty().removeClass('alert-success alert-danger');
-                $('#notification').text('Ошибка при отправке заявки: ' + error).addClass('alert-danger').show();
-            }
-        });
     });
 
     let originalDescription = $('#description-text').text();
@@ -504,10 +449,43 @@ $(document).ready(function() {
         });
     });
 
-    const successMessage = sessionStorage.getItem('formSuccess');
+    var successMessage = sessionStorage.getItem('formSuccess');
     if (successMessage) {
-        $('#notification').text(successMessage).addClass('alert-success').show();
-        setTimeout(function() { $('#notification').fadeOut(); }, 2000);
+        $('#notification')
+            .html(successMessage)
+            .removeClass('alert-danger alert-success')
+            .addClass('sent-message')
+            .css('display', 'block');
+
+        setTimeout(function() {
+            $('#notification').fadeOut();
+        }, 3000);
+
         sessionStorage.removeItem('formSuccess');
+    }
+
+    // --- Единая система уведомлений ---
+    const notificationDiv = document.getElementById('notification');
+
+    // Функция для показа уведомления
+    const showNotification = (message, type = 'success') => {
+        if (!notificationDiv || !message) return;
+
+        notificationDiv.textContent = message;
+        notificationDiv.className = 'alert'; // Сброс классов
+        notificationDiv.classList.add(type === 'success' ? 'sent-message' : 'error-message');
+        
+        notificationDiv.style.display = 'block'; // Показываем блок
+
+        // Скрываем через 3 секунды
+        setTimeout(() => {
+            notificationDiv.style.display = 'none'; // Просто скрываем
+            notificationDiv.textContent = ''; // Очищаем
+        }, 3000);
+    };
+
+    // Проверяем, есть ли уведомление от PHP при загрузке страницы
+    if (notificationDiv && notificationDiv.dataset.message) {
+        showNotification(notificationDiv.dataset.message, notificationDiv.dataset.type);
     }
 });
