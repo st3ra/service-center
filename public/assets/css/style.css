@@ -14,6 +14,10 @@ body {
     padding-top: 80px; /* Offset for fixed header */
 }
 
+.mobile-nav-active {
+  overflow: hidden;
+}
+
 /* Font Overrides */
 :root {
   --default-font: 'Lato', sans-serif;
@@ -98,21 +102,34 @@ body {
 /*--------------------------------------------------------------
 # Header
 --------------------------------------------------------------*/
+.navmenu {
+  overflow-y: auto;
+  z-index: 9998;
+  width: 260px;
+  right: -260px;
+}
+
+.mobile-nav-toggle {
+  z-index: 9999;
+}
+
+.mobile-nav-active .mobile-nav-toggle {
+  right: 280px;
+}
+
 /* Sticky, Transparent Header Styles */
 #header {
   transition: background-color 0.3s ease-in-out;
 }
 #header.fixed-top {
   background-color: rgba(7, 13, 26, 0.7); /* Semi-transparent dark background */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 .scrolled #header.fixed-top {
   background-color: rgb(7, 13, 26); /* Opaque dark background on scroll */
 }
 
 /* Force Desktop Navigation on large screens */
-@media (min-width: 992px) {
+@media (min-width: 1200px) {
   .mobile-nav-toggle {
     display: none !important;
   }
@@ -134,12 +151,6 @@ body {
   .navmenu a, .navmenu a:focus {
     padding: 10px 15px;
     white-space: nowrap;
-  }
-  body.mobile-nav-active .navmenu {
-    position: static !important;
-  }
-  body.mobile-nav-active {
-    overflow: auto !important;
   }
 }
 

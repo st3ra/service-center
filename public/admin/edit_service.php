@@ -65,11 +65,12 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
     
     // Функция для обработки загрузки изображения
     function handle_image_upload($image_name_field = 'image_name', $image_file_field = 'image_file', $old_path = '') {
-        $result = ['path' => $old_path, 'error' => '', 'deleted_old' => false];
+        $result = ['path' => $old_path, 'error' => '', 'deleted_old' => false, 'new_file_uploaded' => false];
         if (!isset($_FILES[$image_file_field]) || $_FILES[$image_file_field]['error'] === UPLOAD_ERR_NO_FILE) {
             // Нет нового файла — оставляем старый путь
             return $result;
         }
+        $result['new_file_uploaded'] = true;
         $image_name = trim($_POST[$image_name_field] ?? '');
         if ($image_name === '') {
             $result['error'] = 'Укажите название изображения';
@@ -119,7 +120,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
             $image_path = $img_result['path'];
         }
         // --- Переименование файла, если изменено только название ---
-        if ($action === 'edit_service' && !$is_new && !$img_result['deleted_old'] && !$img_result['error']) {
+        if ($action === 'edit_service' && !$is_new && !$img_result['new_file_uploaded'] && !$img_result['error']) {
             $old_path = $service['image_path'];
             $old_dir = $_SERVER['DOCUMENT_ROOT'] . '/images/services/';
             $old_ext = pathinfo($old_path, PATHINFO_EXTENSION);

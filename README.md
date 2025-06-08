@@ -29,32 +29,23 @@ A web application for service centers: booking, request management, analytics.
    docker-compose up -d
    ```
 
-4. **Install dependencies via Docker Composer:**
-   ```bash
-   docker-compose exec php composer install --no-interaction --prefer-dist --optimize-autoloader
-   ```
-
-5. **Set permissions for upload and temp folders:**
-   ```bash
-   docker-compose exec php bash
-   chown -R www-data:www-data /var/www/html/images/services /var/www/html/public/uploads /var/www/html/tmp
-   chmod -R 755 /var/www/html/images/services /var/www/html/public/uploads /var/www/html/tmp
-   exit
-   ```
-
-6. **Initialize the database:**
+4. **Initialize the database:**
    - Open phpMyAdmin: [http://localhost:8081](http://localhost:8081)
-   - Create a database (e.g., `service_center`)
-   - Import `database.sql` via the "Import" tab or run:
+   - Log in with user: `root`, password: `password`
+   - Create a database (e.g., `service_center` with `utf8mb4_unicode_ci` collation).
+   - Go to the created database and use the "Import" tab to upload the `database.sql` file.
+   - Alternatively, you can run this command in your terminal:
      ```bash
-     docker-compose exec db mysql -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE < database.sql
+     docker-compose exec db mysql -uuser -ppassword service_center < databse.sql
      ```
 
-7. **Access the application:**
+5. **Access the application:**
    - Main page: [http://localhost:8080](http://localhost:8080)
    - phpMyAdmin: [http://localhost:8081](http://localhost:8081)
 
 ## Notes
+- Composer dependencies are installed automatically during the `docker-compose build` step.
+- The `public/uploads` and `public/images/services` directories are also created automatically inside the container.
 - The entire project is mounted into the container: `- ./:/var/www/html`
 - Apache DocumentRoot: `/var/www/html/public`
 - The `tmp` directory is used by mPDF for temporary files. It is present in the repository (empty), and its contents are ignored by git.

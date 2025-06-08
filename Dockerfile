@@ -19,18 +19,25 @@ RUN apt-get update && apt-get install -y \
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Копируем проект
 WORKDIR /var/www/html
-COPY . /var/www/html
+
+# Сначала копируем файлы Composer и устанавливаем зависимости
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Теперь копируем остальные файлы проекта
+COPY . .
 
 # Делаем директорию безопасной для git
 RUN git config --global --add safe.directory /var/www/html
 
-# Установка зависимостей Composer
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
-
 # Настройка Apache
 RUN a2enmod rewrite
+
+# Создаем директории для загрузок и устанавливаем права
+RUN mkdir -p /var/www/html/public/uploads /var/www/html/public/images/services && \
+    chown -R www-data:www-data /var/www/html/public/uploads /var/www/html/public/images/services /var/www/html/tmp && \
+    chmod -R 755 /var/www/html/public/uploads /var/www/html/public/images/services /var/www/html/tmp
 
 # Права для Apache
 RUN chown -R www-data:www-data /var/www/html
